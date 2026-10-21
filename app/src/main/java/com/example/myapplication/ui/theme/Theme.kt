@@ -1,6 +1,5 @@
 package com.example.myapplication.ui.theme
 
-import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -9,20 +8,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 private val DarkColorScheme = darkColorScheme(
-    primary = UtpRed,
-    secondary = UtpDarkRed,
-    background = Color(0xFF121212),
-    surface = Color(0xFF1E1E1E),
+    primary = UtpPurplePrimary,
+    secondary = UtpOrangeHighlight,
+    background = Color(0xFF1E1B18),
+    surface = Color(0xFF2A2622),
     onPrimary = Color.White
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = UtpRed,
-    secondary = UtpDarkRed,
-    background = UtpBackground,
-    surface = UtpSurface,
+    primary = UtpPurplePrimary,
+    secondary = UtpOrangeHighlight,
+    background = UtpWarmBackground,
+    surface = UtpCardBackground,
     onPrimary = Color.White,
-    onSecondary = Color.White
+    onSecondary = Color.White,
+    onBackground = UtpTextPrimary,
+    onSurface = UtpTextPrimary
 )
 
 @Composable

@@ -2,6 +2,7 @@ package com.example.myapplication.ui.screens
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -13,14 +14,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.myapplication.ui.theme.UtpRed
+import com.example.myapplication.ui.theme.UtpOrangeHighlight
+import com.example.myapplication.ui.theme.UtpPurplePrimary
 
 sealed class BottomNavItem(val route: String, val title: String, val icon: ImageVector) {
     object Home : BottomNavItem("home", "Inicio", Icons.Default.Home)
-    object Schedule : BottomNavItem("horario", "Horario", Icons.Default.DateRange)
-    object Grades : BottomNavItem("cursos", "Cursos", Icons.Default.Book)
-    object Attendance : BottomNavItem("asistencia", "Asistencia", Icons.Default.CheckCircle)
-    object Card : BottomNavItem("carne", "Carné", Icons.Default.QrCode)
+    object Docente : BottomNavItem("teacher_home", "Docente", Icons.Default.Person)
+    object Panel : BottomNavItem("admin_subjects", "Panel", Icons.Default.Dashboard)
+    object Biblioteca : BottomNavItem("library", "Biblioteca", Icons.AutoMirrored.Filled.MenuBook)
+    object Publicacion : BottomNavItem("review_publish", "Publicar", Icons.Default.Publish)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,17 +33,17 @@ fun MainScreen(
     val navController = rememberNavController()
     val navItems = listOf(
         BottomNavItem.Home,
-        BottomNavItem.Schedule,
-        BottomNavItem.Grades,
-        BottomNavItem.Attendance,
-        BottomNavItem.Card
+        BottomNavItem.Docente,
+        BottomNavItem.Panel,
+        BottomNavItem.Biblioteca,
+        BottomNavItem.Publicacion
     )
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("UTP Móvil", color = Color.White) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = UtpRed),
+                title = { Text("Portal UTP Academic", color = Color.White) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = UtpOrangeHighlight),
                 actions = {
                     IconButton(onClick = onLogout) {
                         Icon(Icons.Default.ExitToApp, contentDescription = "Cerrar Sesión", tint = Color.White)
@@ -62,9 +64,9 @@ fun MainScreen(
                         label = { Text(item.title) },
                         selected = currentRoute == item.route,
                         colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = UtpRed,
-                            selectedTextColor = UtpRed,
-                            indicatorColor = UtpRed.copy(alpha = 0.1f)
+                            selectedIconColor = UtpOrangeHighlight,
+                            selectedTextColor = UtpOrangeHighlight,
+                            indicatorColor = UtpOrangeHighlight.copy(alpha = 0.1f)
                         ),
                         onClick = {
                             if (currentRoute != item.route) {
@@ -88,27 +90,68 @@ fun MainScreen(
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(BottomNavItem.Home.route) {
-                HomeScreen(onNavigateToSection = { route ->
-                    navController.navigate(route) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                })
+                JefaturaHomeScreen(onNavigateTo = { route -> navController.navigate(route) })
             }
-            composable(BottomNavItem.Schedule.route) {
-                ScheduleScreen()
+            composable(BottomNavItem.Docente.route) {
+                TeacherHomeScreen(onNavigateTo = { route -> navController.navigate(route) })
             }
-            composable(BottomNavItem.Grades.route) {
-                GradesScreen()
+            composable(BottomNavItem.Panel.route) {
+                AdminSubjectsScreen(
+                    onBack = { navController.popBackStack() },
+                    onSelectSubject = { navController.navigate("unit_editor") }
+                )
             }
-            composable(BottomNavItem.Attendance.route) {
-                AttendanceScreen()
+            composable(BottomNavItem.Biblioteca.route) {
+                TeacherLibraryScreen(
+                    onBack = { navController.popBackStack() },
+                    onSelectObjective = { navController.navigate("assign_objectives") }
+                )
             }
-            composable(BottomNavItem.Card.route) {
-                DigitalCardScreen()
+            composable(BottomNavItem.Publicacion.route) {
+                ReviewPublishScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable("admin_subjects") {
+                AdminSubjectsScreen(
+                    onBack = { navController.popBackStack() },
+                    onSelectSubject = { navController.navigate("unit_editor") }
+                )
+            }
+            composable("teacher_home") {
+                TeacherHomeScreen(onNavigateTo = { route -> navController.navigate(route) })
+            }
+            composable("library") {
+                TeacherLibraryScreen(
+                    onBack = { navController.popBackStack() },
+                    onSelectObjective = { navController.navigate("assign_objectives") }
+                )
+            }
+            composable("assign_objectives") {
+                AssignObjectivesScreen(
+                    onBack = { navController.popBackStack() },
+                    onAssignedSuccess = { navController.navigate("course_progress") }
+                )
+            }
+            composable("course_progress") {
+                CourseProgressScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable("unit_editor") {
+                UnitEditorScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable("review_publish") {
+                ReviewPublishScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable("activity_detail") {
+                ActivityDetailScreen(
+                    onBack = { navController.popBackStack() }
+                )
             }
         }
     }
