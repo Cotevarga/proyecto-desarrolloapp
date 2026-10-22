@@ -11,6 +11,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import com.example.myapplication.ui.screens.LoginScreen
 import com.example.myapplication.ui.screens.MainScreen
+import com.example.myapplication.ui.screens.StudentMainScreen
+import com.example.myapplication.ui.screens.TeacherMainScreen
 import com.example.myapplication.ui.theme.MyApplicationTheme
 
 class MainActivity : ComponentActivity() {
@@ -24,11 +26,29 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     var isLoggedIn by remember { mutableStateOf(false) }
+                    var currentRole by remember { mutableStateOf("JEFATURA") }
 
                     if (isLoggedIn) {
-                        MainScreen(onLogout = { isLoggedIn = false })
+                        when (currentRole) {
+                            "ALUMNO" -> StudentMainScreen(
+                                onLogout = { isLoggedIn = false },
+                                onSwitchRole = { newRole -> currentRole = newRole }
+                            )
+                            "DOCENTE" -> TeacherMainScreen(
+                                onLogout = { isLoggedIn = false },
+                                onSwitchRole = { newRole -> currentRole = newRole }
+                            )
+                            else -> MainScreen(
+                                onLogout = { isLoggedIn = false }
+                            )
+                        }
                     } else {
-                        LoginScreen(onLoginSuccess = { isLoggedIn = true })
+                        LoginScreen(
+                            onLoginSuccess = { role ->
+                                currentRole = role
+                                isLoggedIn = true
+                            }
+                        )
                     }
                 }
             }

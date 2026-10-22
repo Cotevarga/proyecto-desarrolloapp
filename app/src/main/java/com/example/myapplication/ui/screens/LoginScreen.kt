@@ -28,7 +28,7 @@ import com.example.myapplication.ui.theme.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
-    onLoginSuccess: () -> Unit
+    onLoginSuccess: (String) -> Unit
 ) {
     val context = LocalContext.current
     val dbHelper = remember { UTPDatabaseHelper(context) }
@@ -133,8 +133,13 @@ fun LoginScreen(
                 onClick = {
                     isLoading = true
                     val user = dbHelper.authenticateUser(email.trim(), password.trim())
+                    val role = when {
+                        email.contains("estudiante", ignoreCase = true) -> "ALUMNO"
+                        email.contains("carlos", ignoreCase = true) || email.contains("alejandra", ignoreCase = true) -> "DOCENTE"
+                        else -> user?.role ?: "JEFATURA"
+                    }
                     if (user != null || email.isNotEmpty()) {
-                        onLoginSuccess()
+                        onLoginSuccess(role)
                     } else {
                         errorMessage = "Usuario o contraseña no válidos en SQLite"
                     }
@@ -156,33 +161,45 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Demo Shortcut buttons
+            // Demo Shortcut buttons for Alumno, Docente, Jefatura
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 OutlinedButton(
                     onClick = {
-                        email = "jefatura@utp.edu.pe"
-                        password = "12345"
-                        onLoginSuccess()
+                        email = "estudiante@utp.edu.pe"
+                        password = "123456"
+                        onLoginSuccess("ALUMNO")
                     },
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text("Jefatura UTP", fontSize = 11.sp, color = UtpTextPrimary)
+                    Text("Alumno", fontSize = 11.sp, color = UtpTextPrimary)
                 }
 
                 OutlinedButton(
                     onClick = {
                         email = "carlos@utp.edu.pe"
-                        password = "12345"
-                        onLoginSuccess()
+                        password = "123456"
+                        onLoginSuccess("DOCENTE")
                     },
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text("Docente", fontSize = 11.sp, color = UtpTextPrimary)
+                }
+
+                OutlinedButton(
+                    onClick = {
+                        email = "jefatura@utp.edu.pe"
+                        password = "123456"
+                        onLoginSuccess("JEFATURA")
+                    },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("Jefatura UTP", fontSize = 11.sp, color = UtpTextPrimary)
                 }
             }
         }
