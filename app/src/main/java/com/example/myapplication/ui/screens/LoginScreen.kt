@@ -1,5 +1,6 @@
 package com.example.myapplication.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,6 +25,9 @@ import androidx.compose.ui.unit.sp
 import com.example.myapplication.data.UTPDatabaseHelper
 import com.example.myapplication.ui.components.DbStatusBadge
 import com.example.myapplication.ui.theme.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,8 +36,9 @@ fun LoginScreen(
 ) {
     val context = LocalContext.current
     val dbHelper = remember { UTPDatabaseHelper(context) }
+    val coroutineScope = rememberCoroutineScope()
 
-    var email by remember { mutableStateOf("jefatura@utp.edu.pe") }
+    var email by remember { mutableStateOf("jefatura@utp.edu") }
     var password by remember { mutableStateOf("123456") }
     var passwordVisible by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -47,7 +52,7 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // UTP Header Logo Card
+            // Logotipo UTP
             Card(
                 modifier = Modifier.size(90.dp),
                 shape = RoundedCornerShape(20.dp),
@@ -82,10 +87,13 @@ fun LoginScreen(
                 modifier = Modifier.padding(top = 4.dp, bottom = 28.dp)
             )
 
-            // Email Input
+            // Campo de Correo
             OutlinedTextField(
                 value = email,
-                onValueChange = { email = it },
+                onValueChange = {
+                    email = it
+                    errorMessage = null
+                },
                 label = { Text("Correo Institucional") },
                 leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = UtpOrangeHighlight) },
                 singleLine = true,
@@ -95,10 +103,13 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Password Input
+            // Campo de Contraseña
             OutlinedTextField(
                 value = password,
-                onValueChange = { password = it },
+                onValueChange = {
+                    password = it
+                    errorMessage = null
+                },
                 label = { Text("Contraseña") },
                 leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = UtpOrangeHighlight) },
                 trailingIcon = {
@@ -128,49 +139,67 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Login Button
+            // Botón de Inicio de Sesión
             Button(
                 onClick = {
+                    if (email.isBlank() || password.isBlank()) {
+                        errorMessage = "Ingresa tu correo y contraseña"
+                        return@Button
+                    }
+
                     isLoading = true
-                    val user = dbHelper.authenticateUser(email.trim(), password.trim())
-                    val role = when {
-                        email.contains("estudiante", ignoreCase = true) -> "ALUMNO"
-                        email.contains("carlos", ignoreCase = true) || email.contains("alejandra", ignoreCase = true) -> "DOCENTE"
-                        else -> user?.role ?: "JEFATURA"
+                    errorMessage = null
+
+                    coroutineScope.launch {
+                        // Consulta en hilo secundario mediante validarUsuario
+                        val role = withContext(Dispatchers.IO) {
+                            dbHelper.validarUsuario(email, password)
+                        }
+                        isLoading = false
+
+                        if (role != null) {
+                            Toast.makeText(context, "¡Inicio de sesión exitoso!", Toast.LENGTH_SHORT).show()
+                            onLoginSuccess(role) // Pasa el rol retornado por SQLite ("ALUMNO", "DOCENTE", "JEFATURA")
+                        } else {
+                            errorMessage = "Usuario o contraseña no válidos en SQLite"
+                        }
                     }
-                    if (user != null || email.isNotEmpty()) {
-                        onLoginSuccess(role)
-                    } else {
-                        errorMessage = "Usuario o contraseña no válidos en SQLite"
-                    }
-                    isLoading = false
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
+                enabled = !isLoading,
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = UtpOrangeHighlight)
             ) {
-                Text(
-                    text = if (isLoading) "CONECTANDO..." else "INICIAR SESIÓN",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(
+                        text = "INICIAR SESIÓN",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Demo Shortcut buttons for Alumno, Docente, Jefatura
+            // Atajos de autocompletado alineados con la base de datos
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 OutlinedButton(
                     onClick = {
-                        email = "estudiante@utp.edu.pe"
+                        email = "alumno@utp.edu"
                         password = "123456"
-                        onLoginSuccess("ALUMNO")
+                        errorMessage = null
                     },
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(8.dp)
@@ -180,9 +209,9 @@ fun LoginScreen(
 
                 OutlinedButton(
                     onClick = {
-                        email = "carlos@utp.edu.pe"
+                        email = "docente@utp.edu"
                         password = "123456"
-                        onLoginSuccess("DOCENTE")
+                        errorMessage = null
                     },
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(8.dp)
@@ -192,9 +221,9 @@ fun LoginScreen(
 
                 OutlinedButton(
                     onClick = {
-                        email = "jefatura@utp.edu.pe"
+                        email = "jefatura@utp.edu"
                         password = "123456"
-                        onLoginSuccess("JEFATURA")
+                        errorMessage = null
                     },
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(8.dp)
@@ -208,7 +237,7 @@ fun LoginScreen(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 16.dp),
-            statusText = "Conectando con la base de datos local (SQLite)...",
+            statusText = "Conectado a SQLite (utp_database.db)",
             isVisible = true
         )
     }

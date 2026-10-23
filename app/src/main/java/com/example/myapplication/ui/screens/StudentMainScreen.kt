@@ -25,7 +25,9 @@ import com.example.myapplication.ui.theme.*
 @Composable
 fun StudentMainScreen(
     onLogout: () -> Unit,
-    onSwitchRole: (String) -> Unit
+    onSwitchRole: (String) -> Unit,
+    onNavigateToGrades: () -> Unit = {},
+    onNavigateToSchedule: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableStateOf("inicio") }
     var currentSubScreen by remember { mutableStateOf("home") }
@@ -99,7 +101,9 @@ fun StudentMainScreen(
                 "home" -> StudentHomeScreen(
                     onOpenUnit = { currentSubScreen = "unit" },
                     onOpenPractice = { currentSubScreen = "practice" },
-                    onSwitchProfile = { role -> onSwitchRole(role) }
+                    onSwitchProfile = { role -> onSwitchRole(role) },
+                    onNavigateToGrades = onNavigateToGrades,
+                    onNavigateToSchedule = onNavigateToSchedule
                 )
                 "unit" -> StudentUnitScreen(
                     onStartPractice = { currentSubScreen = "practice" },
@@ -134,14 +138,15 @@ fun StudentMainScreen(
 fun StudentHomeScreen(
     onOpenUnit: () -> Unit,
     onOpenPractice: () -> Unit,
-    onSwitchProfile: (String) -> Unit
+    onSwitchProfile: (String) -> Unit,
+    onNavigateToGrades: () -> Unit = {},
+    onNavigateToSchedule: () -> Unit = {}
 ) {
     val context = LocalContext.current
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Active Profile Card
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -169,6 +174,31 @@ fun StudentHomeScreen(
                             Text("8 materias • 3 tareas pendientes", fontSize = 11.sp, color = UtpOrangeHighlight, fontWeight = FontWeight.Bold)
                         }
                     }
+                }
+            }
+        }
+
+        // Accesos rápidos a Notas y Horarios
+        item {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedButton(
+                    onClick = onNavigateToGrades,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(Icons.Default.Grade, contentDescription = null, tint = UtpOrangeHighlight)
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Ver Notas", fontSize = 12.sp, color = UtpTextPrimary)
+                }
+
+                OutlinedButton(
+                    onClick = onNavigateToSchedule,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(Icons.Default.Schedule, contentDescription = null, tint = UtpOrangeHighlight)
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Ver Horario", fontSize = 12.sp, color = UtpTextPrimary)
                 }
             }
         }

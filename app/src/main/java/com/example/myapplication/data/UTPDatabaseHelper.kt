@@ -1,235 +1,150 @@
 package com.example.myapplication.data
 
-import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 
-data class User(
-    val id: Long,
-    val name: String,
-    val email: String,
-    val role: String, // "JEFATURA", "DOCENTE", "ALUMNO"
-    val school: String,
-    val status: String
-)
-
-data class Subject(
-    val id: Long,
-    val name: String,
-    val unitsCount: Int,
-    val level: String,
-    val category: String
-)
-
-data class UnitObjective(
-    val id: Long,
-    val subjectId: Long,
+// Clases de modelo para mapeo de datos
+data class TaskModel(
+    val id: Int,
     val title: String,
-    val description: String,
-    val isAuthorized: Boolean
+    val subtitle: String,
+    val badge: String
 )
 
-data class ActivityItem(
-    val id: Long,
-    val title: String,
-    val subject: String,
-    val date: String,
+data class ClassModel(
+    val id: Int,
     val time: String,
-    val modality: String,
-    val reminder: String
+    val name: String,
+    val students: String,
+    val room: String
 )
 
 class UTPDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
     companion object {
-        private const val DATABASE_NAME = "utp_academic.db"
-        private const val DATABASE_VERSION = 1
-
-        const val TABLE_USERS = "users"
-        const val TABLE_SUBJECTS = "subjects"
-        const val TABLE_OBJECTIVES = "objectives"
-        const val TABLE_ACTIVITIES = "activities"
+        private const val DATABASE_NAME = "utp_database.db"
+        private const val DATABASE_VERSION = 2
     }
 
     override fun onCreate(db: SQLiteDatabase) {
-        // Create Users Table
+        // 1. Tabla de Usuarios para Login
         db.execSQL("""
-            CREATE TABLE $TABLE_USERS (
+            CREATE TABLE IF NOT EXISTS usuarios (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                email TEXT UNIQUE NOT NULL,
-                password TEXT NOT NULL,
-                role TEXT NOT NULL,
-                school TEXT,
-                status TEXT DEFAULT 'Activo'
+                email TEXT UNIQUE,
+                password TEXT,
+                nombre TEXT,
+                rol TEXT
             )
         """.trimIndent())
 
-        // Create Subjects Table
+        // 2. Tabla de Tareas (Pantalla Alumno)
         db.execSQL("""
-            CREATE TABLE $TABLE_SUBJECTS (
+            CREATE TABLE IF NOT EXISTS tasks (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                unitsCount INTEGER DEFAULT 0,
-                level TEXT NOT NULL,
-                category TEXT
+                title TEXT,
+                subtitle TEXT,
+                badge TEXT
             )
         """.trimIndent())
 
-        // Create Objectives Table
+        // 3. Tabla de Clases (Pantalla Docente)
         db.execSQL("""
-            CREATE TABLE $TABLE_OBJECTIVES (
+            CREATE TABLE IF NOT EXISTS teacher_classes (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                subjectId INTEGER,
-                title TEXT NOT NULL,
-                description TEXT,
-                isAuthorized INTEGER DEFAULT 1
+                time TEXT,
+                name TEXT,
+                students TEXT,
+                room TEXT
             )
         """.trimIndent())
 
-        // Create Activities Table
-        db.execSQL("""
-            CREATE TABLE $TABLE_ACTIVITIES (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                title TEXT NOT NULL,
-                subject TEXT NOT NULL,
-                date TEXT NOT NULL,
-                time TEXT NOT NULL,
-                modality TEXT NOT NULL,
-                reminder TEXT
-            )
-        """.trimIndent())
-
-        // Seed initial data
-        seedInitialData(db)
+        // Insertar registros de prueba iniciales
+        seedData(db)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        db.execSQL("DROP TABLE IF EXISTS $TABLE_USERS")
-        db.execSQL("DROP TABLE IF EXISTS $TABLE_SUBJECTS")
-        db.execSQL("DROP TABLE IF EXISTS $TABLE_OBJECTIVES")
-        db.execSQL("DROP TABLE IF EXISTS $TABLE_ACTIVITIES")
+        db.execSQL("DROP TABLE IF EXISTS usuarios")
+        db.execSQL("DROP TABLE IF EXISTS tasks")
+        db.execSQL("DROP TABLE IF EXISTS teacher_classes")
         onCreate(db)
     }
 
-    private fun seedInitialData(db: SQLiteDatabase) {
-        // Users
-        db.execSQL("""
-            INSERT INTO $TABLE_USERS (name, email, password, role, school, status) VALUES
-            ('Maria Angelica', 'jefatura@utp.edu.pe', '123456', 'JEFATURA', 'Escuela Escritora Marcela Paz', 'Activo'),
-            ('Profesor Carlos', 'carlos@utp.edu.pe', '123456', 'DOCENTE', 'Medicina Interna', 'Activo'),
-            ('Profesora Alejandra', 'alejandra@utp.edu.pe', '123456', 'DOCENTE', 'Matemáticas', 'Activo'),
-            ('Estudiante 01', 'estudiante@utp.edu.pe', '123456', 'ALUMNO', '1° Básico A', 'Activo')
-        """.trimIndent())
+    private fun seedData(db: SQLiteDatabase) {
+        // Cuentas para el Login
+        db.execSQL("INSERT OR IGNORE INTO usuarios (email, password, nombre, rol) VALUES ('alumno@utp.edu', '123456', 'Alberto Gómez', 'ALUMNO')")
+        db.execSQL("INSERT OR IGNORE INTO usuarios (email, password, nombre, rol) VALUES ('docente@utp.edu', '123456', 'María Angélica', 'DOCENTE')")
+        db.execSQL("INSERT OR IGNORE INTO usuarios (email, password, nombre, rol) VALUES ('jefatura@utp.edu', '123456', 'Carlos Mendoza', 'JEFATURA')")
 
-        // Subjects
-        db.execSQL("""
-            INSERT INTO $TABLE_SUBJECTS (name, unitsCount, level, category) VALUES
-            ('Matemáticas', 3, '1.° Básico', 'Números y operaciones'),
-            ('Inglés', 2, '2.° Básico', 'Idiomas'),
-            ('Lenguaje', 3, '1.° Básico', 'Comunicación'),
-            ('Historia', 4, '1.° Básico', 'Ciencias Sociales')
-        """.trimIndent())
+        // Tareas del estudiante
+        db.execSQL("INSERT INTO tasks (title, subtitle, badge) VALUES ('Ejercicios de derivadas', 'Matemáticas • Entrega hoy', 'Hoy')")
+        db.execSQL("INSERT INTO tasks (title, subtitle, badge) VALUES ('Resumen de reacciones', 'Química • Entrega mañana', 'Mañana')")
+        db.execSQL("INSERT INTO tasks (title, subtitle, badge) VALUES ('Lectura de Cien años', 'Literatura • Capítulo 3', 'Semana')")
 
-        // Objectives
-        db.execSQL("""
-            INSERT INTO $TABLE_OBJECTIVES (subjectId, title, description, isAuthorized) VALUES
-            (1, 'Contar y representar cantidades del 1 al 10', 'Identificación de cantidades mediante objetos e imágenes', 1),
-            (3, 'Jugamos con los sonidos', 'Reconocer sonidos iniciales en palabras', 1),
-            (4, 'Mi familia y mi comunidad', 'Reconocer integrantes y roles de la comunidad', 1)
-        """.trimIndent())
-
-        // Activities
-        db.execSQL("""
-            INSERT INTO $TABLE_ACTIVITIES (title, subject, date, time, modality, reminder) VALUES
-            ('Revisión de caso clínico', 'Medicina Interna - Curso: 4° año', 'Mié 12 sep 2025', '08:30 - 10:00', 'Presencial - Sala 4B', '15 min antes'),
-            ('Matemáticas Básica', '1A - 42 estudiantes', 'Hoy', '09:00 - 10:30', 'Sala 204', '10 min antes'),
-            ('Álgebra Lineal', '1B - 38 estudiantes', 'Hoy', '11:00 - 12:30', 'Sala 307', '10 min antes')
-        """.trimIndent())
+        // Clases del docente
+        db.execSQL("INSERT INTO teacher_classes (time, name, students, room) VALUES ('09:00 - 10:30', 'Matemáticas Básica', '1A • 42 estudiantes', 'Sala 204')")
+        db.execSQL("INSERT INTO teacher_classes (time, name, students, room) VALUES ('11:00 - 12:30', 'Álgebra Lineal', '1B • 38 estudiantes', 'Sala 307')")
     }
 
-    fun getAllUsers(): List<User> {
-        val list = mutableListOf<User>()
+    // --- MÉTODOS DE CONSULTA Y OPERACIONES ---
+
+    // Validar usuario en el Login
+    fun validarUsuario(email: String, password: String): String? {
         val db = readableDatabase
-        val cursor = db.rawQuery("SELECT id, name, email, role, school, status FROM $TABLE_USERS", null)
+        val cursor = db.rawQuery(
+            "SELECT rol FROM usuarios WHERE LOWER(email) = LOWER(?) AND password = ?",
+            arrayOf(email.trim(), password.trim())
+        )
+
+        var rol: String? = null
         if (cursor.moveToFirst()) {
-            do {
-                list.add(
-                    User(
-                        id = cursor.getLong(0),
-                        name = cursor.getString(1),
-                        email = cursor.getString(2),
-                        role = cursor.getString(3),
-                        school = cursor.getString(4) ?: "",
-                        status = cursor.getString(5) ?: "Activo"
-                    )
-                )
-            } while (cursor.moveToNext())
+            rol = cursor.getString(0)
         }
         cursor.close()
-        return list
+        return rol
     }
 
-    fun authenticateUser(email: String, pass: String): User? {
+    // Obtener tareas para el estudiante
+    fun getTasks(): List<TaskModel> {
+        val tasks = mutableListOf<TaskModel>()
         val db = readableDatabase
-        val cursor = db.rawQuery("SELECT id, name, email, role, school, status FROM $TABLE_USERS WHERE email = ? AND password = ?", arrayOf(email, pass))
-        var user: User? = null
-        if (cursor.moveToFirst()) {
-            user = User(
-                id = cursor.getLong(0),
-                name = cursor.getString(1),
-                email = cursor.getString(2),
-                role = cursor.getString(3),
-                school = cursor.getString(4) ?: "",
-                status = cursor.getString(5) ?: "Activo"
-            )
-        }
-        cursor.close()
-        return user
-    }
-
-    fun getAllSubjects(): List<Subject> {
-        val list = mutableListOf<Subject>()
-        val db = readableDatabase
-        val cursor = db.rawQuery("SELECT id, name, unitsCount, level, category FROM $TABLE_SUBJECTS", null)
+        val cursor = db.rawQuery("SELECT id, title, subtitle, badge FROM tasks", null)
         if (cursor.moveToFirst()) {
             do {
-                list.add(
-                    Subject(
-                        id = cursor.getLong(0),
-                        name = cursor.getString(1),
-                        unitsCount = cursor.getInt(2),
-                        level = cursor.getString(3),
-                        category = cursor.getString(4) ?: ""
-                    )
-                )
-            } while (cursor.moveToNext())
-        }
-        cursor.close()
-        return list
-    }
-
-    fun getAllActivities(): List<ActivityItem> {
-        val list = mutableListOf<ActivityItem>()
-        val db = readableDatabase
-        val cursor = db.rawQuery("SELECT id, title, subject, date, time, modality, reminder FROM $TABLE_ACTIVITIES", null)
-        if (cursor.moveToFirst()) {
-            do {
-                list.add(
-                    ActivityItem(
-                        id = cursor.getLong(0),
+                tasks.add(
+                    TaskModel(
+                        id = cursor.getInt(0),
                         title = cursor.getString(1),
-                        subject = cursor.getString(2),
-                        date = cursor.getString(3),
-                        time = cursor.getString(4),
-                        modality = cursor.getString(5),
-                        reminder = cursor.getString(6) ?: "15 min antes"
+                        subtitle = cursor.getString(2),
+                        badge = cursor.getString(3)
                     )
                 )
             } while (cursor.moveToNext())
         }
         cursor.close()
-        return list
+        return tasks
+    }
+
+    // Obtener clases asignadas al docente
+    fun getTeacherClasses(): List<ClassModel> {
+        val classes = mutableListOf<ClassModel>()
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT id, time, name, students, room FROM teacher_classes", null)
+        if (cursor.moveToFirst()) {
+            do {
+                classes.add(
+                    ClassModel(
+                        id = cursor.getInt(0),
+                        time = cursor.getString(1),
+                        name = cursor.getString(2),
+                        students = cursor.getString(3),
+                        room = cursor.getString(4)
+                    )
+                )
+            } while (cursor.moveToNext())
+        }
+        cursor.close()
+        return classes
     }
 }

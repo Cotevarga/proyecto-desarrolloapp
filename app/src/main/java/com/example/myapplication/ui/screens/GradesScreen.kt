@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.*
@@ -34,7 +35,9 @@ data class CourseGrades(
 )
 
 @Composable
-fun GradesScreen() {
+fun GradesScreen(
+    onBack: () -> Unit = {}
+) {
     val courses = remember {
         listOf(
             CourseGrades(
@@ -81,18 +84,30 @@ fun GradesScreen() {
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Text(
-            text = "Mis Cursos y Notas",
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(bottom = 8.dp)
+        ) {
+            IconButton(onClick = onBack) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Volver"
+                )
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Mis Cursos y Notas",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+        }
 
         Text(
             text = "Periodo Académico 2026-1",
             fontSize = 14.sp,
             color = Color.Gray,
-            modifier = Modifier.padding(bottom = 16.dp)
+            modifier = Modifier.padding(start = 48.dp, bottom = 16.dp)
         )
 
         LazyColumn(
@@ -138,7 +153,6 @@ fun CourseGradeCard(course: CourseGrades) {
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                // Average Badge
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = if (course.averageGrade >= 12.0) Color(0xFFE8F5E9) else Color(0xFFFFEBEE)
@@ -160,7 +174,6 @@ fun CourseGradeCard(course: CourseGrades) {
                 }
             }
 
-            // Expandable details
             AnimatedVisibility(visible = expanded) {
                 Column(modifier = Modifier.padding(top = 16.dp)) {
                     HorizontalDivider()
