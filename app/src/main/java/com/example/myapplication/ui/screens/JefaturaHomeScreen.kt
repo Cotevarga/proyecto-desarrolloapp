@@ -4,11 +4,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Assignment
-import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,13 +21,33 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.ui.components.DbStatusBadge
+import com.example.myapplication.ui.model.AsignaturaUTP
+import com.example.myapplication.ui.model.EstadoContenido
+import com.example.myapplication.ui.model.UnidadPedagogica
+import com.example.myapplication.ui.repository.UtpRepository
 import com.example.myapplication.ui.theme.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JefaturaHomeScreen(
     onNavigateTo: (String) -> Unit
 ) {
-    var isConnectingDb by remember { mutableStateOf(true) }
+    // 1. Suscripción al estado reactivo del Repository
+    val unidades by UtpRepository.unidadesState.collectAsState()
+    val historial by UtpRepository.historialState.collectAsState()
+
+    // 2. Estados locales de la vista
+    var asignaturaFiltro by remember { mutableStateOf(AsignaturaUTP.LENGUAJE) }
+    var unidadARechazar by remember { mutableStateOf<UnidadPedagogica?>(null) }
+    var textoObservacion by remember { mutableStateOf("") }
+
+    // Unidades filtradas por la asignatura seleccionada
+    val unidadesFiltradas = unidades.filter { it.asignatura == asignaturaFiltro }
+
+    // Cálculo dinámico de métricas
+    val pendientesCount = unidades.count { it.estado == EstadoContenido.PENDIENTE }
+    val aprobadasCount = unidades.count { it.estado == EstadoContenido.APROBADO || it.estado == EstadoContenido.PUBLICADO }
+    val historialCount = historial.size
 
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
@@ -36,7 +57,7 @@ fun JefaturaHomeScreen(
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Profile Card Header
+            // Header: Tarjeta de Perfil
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -51,7 +72,7 @@ fun JefaturaHomeScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "PERFIL ACTIVO",
+                                text = "PERFIL ADMINISTRADOR PEDAGÓGICO",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = UtpTextSecondary
@@ -61,7 +82,7 @@ fun JefaturaHomeScreen(
                                 color = UtpOrangeSoft
                             ) {
                                 Text(
-                                    text = "Jefatura UTP",
+                                    text = "1° Básico UTP",
                                     color = UtpOrangeHighlight,
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
@@ -91,29 +112,14 @@ fun JefaturaHomeScreen(
                             Spacer(modifier = Modifier.width(12.dp))
 
                             Column {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        text = "Maria Angelica",
-                                        fontSize = 18.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = UtpTextPrimary
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Surface(
-                                        shape = RoundedCornerShape(10.dp),
-                                        color = UtpBadgeGreenBg
-                                    ) {
-                                        Text(
-                                            text = "Activo",
-                                            color = UtpBadgeGreenText,
-                                            fontSize = 10.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                        )
-                                    }
-                                }
                                 Text(
-                                    text = "Escuela Escritora Marcela Paz",
+                                    text = "Jefatura de UTP",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = UtpTextPrimary
+                                )
+                                Text(
+                                    text = "Supervisión Primer Ciclo",
                                     fontSize = 13.sp,
                                     color = UtpTextSecondary
                                 )
@@ -123,174 +129,196 @@ fun JefaturaHomeScreen(
                 }
             }
 
-            // Summary Stats (Cursos 2, Clases hoy 3, Tareas 12)
+            // Métricas Dinámicas (Calculadas desde el Repository)
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    StatCard("Cursos", "2", Icons.Default.School, Modifier.weight(1f))
-                    StatCard("Clases hoy", "3", Icons.Default.CalendarToday, Modifier.weight(1f))
-                    StatCard("Tareas", "12", Icons.AutoMirrored.Filled.Assignment, Modifier.weight(1f))
+                    StatCard("Pendientes", pendientesCount.toString(), Icons.Default.Schedule, Modifier.weight(1f))
+                    StatCard("Aprobados", aprobadasCount.toString(), Icons.Default.CheckCircle, Modifier.weight(1f))
+                    StatCard("Auditorías", historialCount.toString(), Icons.AutoMirrored.Filled.Assignment, Modifier.weight(1f))
                 }
             }
 
-            // Section: Accesos Administrativos
+            // Selector de las 4 Asignaturas
             item {
                 Text(
-                    text = "Accesos Administrativos",
+                    text = "Asignaturas (1° Básico)",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = UtpTextPrimary
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(AsignaturaUTP.values().toList()) { asig ->
+                        FilterChip(
+                            selected = asignaturaFiltro == asig,
+                            onClick = { asignaturaFiltro = asig },
+                            label = { Text(asig.displayName) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = UtpOrangeHighlight,
+                                selectedLabelColor = Color.White
+                            )
+                        )
+                    }
+                }
+            }
+
+            // Lista de Unidades Pedagógicas e Interacción UTP
+            item {
+                Text(
+                    text = "Unidades de ${asignaturaFiltro.displayName}",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = UtpTextPrimary
                 )
             }
 
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    AdminAccessCard(
-                        title = "Gestión de Alumnos",
-                        subtitle = "Asignación de cursos y horarios",
-                        icon = Icons.Default.People,
-                        onClick = { onNavigateTo("admin_subjects") }
+            if (unidadesFiltradas.isEmpty()) {
+                item {
+                    Text(
+                        text = "No hay unidades registradas para esta asignatura.",
+                        fontSize = 13.sp,
+                        color = UtpTextSecondary,
+                        modifier = Modifier.padding(vertical = 8.dp)
                     )
-                    AdminAccessCard(
-                        title = "Gestión de Profesores",
-                        subtitle = "Asignación de cursos y horarios",
-                        icon = Icons.Default.PersonOutline,
-                        onClick = { onNavigateTo("teacher_home") }
-                    )
-                    AdminAccessCard(
-                        title = "Planificación Curricular",
-                        subtitle = "Programas de estudio y objetivos",
-                        icon = Icons.AutoMirrored.Filled.MenuBook,
-                        onClick = { onNavigateTo("unit_editor") }
-                    )
-                    AdminAccessCard(
-                        title = "Calendario Académico",
-                        subtitle = "Fechas de evaluación y exámenes",
-                        icon = Icons.Default.Event,
-                        onClick = { onNavigateTo("activity_detail") }
+                }
+            } else {
+                items(unidadesFiltradas) { unidad ->
+                    UnidadPedagogicaCard(
+                        unidad = unidad,
+                        onAprobar = { UtpRepository.cambiarEstadoUnidad(unidad.id, EstadoContenido.APROBADO) },
+                        onPublicar = { UtpRepository.cambiarEstadoUnidad(unidad.id, EstadoContenido.PUBLICADO) },
+                        onDeshabilitar = { UtpRepository.cambiarEstadoUnidad(unidad.id, EstadoContenido.DESHABILITADO, "Deshabilitado para correcciones") },
+                        onSolicitarRechazo = { unidadARechazar = unidad }
                     )
                 }
             }
 
-            // Section: Acciones Académicas
+            // Historial de Modificaciones y Revisiones (Auditoría)
             item {
                 Text(
-                    text = "Acciones académicas",
+                    text = "Historial de Modificaciones y Aprobaciones",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = UtpTextPrimary
                 )
             }
 
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    // Highlighted Orange Card: Publicar Material
+            if (historial.isEmpty()) {
+                item {
+                    Text(
+                        text = "Aún no hay acciones registradas en el historial.",
+                        fontSize = 13.sp,
+                        color = UtpTextSecondary
+                    )
+                }
+            } else {
+                items(historial.take(5)) { log ->
                     Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onNavigateTo("library") },
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = UtpOrangeHighlight)
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = CardDefaults.cardColors(containerColor = UtpCardBackground),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Surface(
-                                shape = RoundedCornerShape(10.dp),
-                                color = Color.White.copy(alpha = 0.2f),
-                                modifier = Modifier.size(40.dp)
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        Icons.Default.HomeWork,
-                                        contentDescription = null,
-                                        tint = Color.White
-                                    )
-                                }
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "Publicar material",
-                                    fontSize = 15.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
-                                Text(
-                                    text = "Subir notas y recursos para los cursos activos.",
+                                    text = log.accion,
                                     fontSize = 12.sp,
-                                    color = Color.White.copy(alpha = 0.9f)
+                                    fontWeight = FontWeight.Bold,
+                                    color = UtpOrangeHighlight
+                                )
+                                Text(
+                                    text = log.usuario,
+                                    fontSize = 11.sp,
+                                    color = UtpTextSecondary
                                 )
                             }
-                            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.White)
+                            Text(
+                                text = log.detalle,
+                                fontSize = 12.sp,
+                                color = UtpTextPrimary,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
                         }
                     }
-
-                    AdminAccessCard(
-                        title = "Administrar Asignaturas",
-                        subtitle = "Consultar clases, tutorías y fechas clave.",
-                        icon = Icons.Default.ImportContacts,
-                        onClick = { onNavigateTo("admin_subjects") }
-                    )
-
-                    AdminAccessCard(
-                        title = "Revisar entregas",
-                        subtitle = "Abrir lista de tareas pendientes y calificaciones.",
-                        icon = Icons.Default.FavoriteBorder,
-                        onClick = { onNavigateTo("course_progress") }
-                    )
-                }
-            }
-
-            // Section: Profesores a cargo
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Profesores a cargo",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = UtpTextPrimary
-                    )
-                    TextButton(onClick = { /* See all */ }) {
-                        Text("Ver todos", fontSize = 12.sp, color = UtpTextSecondary)
-                    }
                 }
             }
 
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    TeacherInChargeItem("Magdalena", "1ro. Básico A • 42 estudiantes", "Historia")
-                    TeacherInChargeItem("Alejandra", "1er. Básico A • 40 estudiantes", "Álgebra")
-                }
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(30.dp))
+                Spacer(modifier = Modifier.height(60.dp))
             }
         }
 
-        // DB status badge pinned at bottom
+        // Diálogo para Ingresar Observaciones al Rechazar
+        unidadARechazar?.let { unidad ->
+            AlertDialog(
+                onDismissRequest = { unidadARechazar = null },
+                title = { Text("Rechazar Contenido") },
+                text = {
+                    Column {
+                        Text("Indique las observaciones pedagógicas para el docente:")
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = textoObservacion,
+                            onValueChange = { textoObservacion = it },
+                            placeholder = { Text("Ej: El objetivo no corresponde a 1° Básico...") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            if (textoObservacion.isNotBlank()) {
+                                UtpRepository.cambiarEstadoUnidad(
+                                    unidad.id,
+                                    EstadoContenido.RECHAZADO,
+                                    textoObservacion
+                                )
+                                textoObservacion = ""
+                                unidadARechazar = null
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        Text("Confirmar Rechazo")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { unidadARechazar = null }) {
+                        Text("Cancelar")
+                    }
+                }
+            )
+        }
+
+        // Indicador inferior de Estado de BD
         DbStatusBadge(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 12.dp),
-            statusText = "En proceso de conexión a BD",
-            isVisible = isConnectingDb
+            statusText = "En proceso de conexión a BD (Operando en memoria local)",
+            isVisible = true
         )
     }
 }
 
+// Componente para las tarjetas de estadísticas superiores
 @Composable
-fun StatCard(title: String, count: String, icon: ImageVector, modifier: Modifier = Modifier) {
+fun StatCard(
+    title: String,
+    count: String,
+    icon: ImageVector,
+    modifier: Modifier = Modifier
+) {
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),
@@ -301,93 +329,131 @@ fun StatCard(title: String, count: String, icon: ImageVector, modifier: Modifier
             modifier = Modifier.padding(12.dp),
             horizontalAlignment = Alignment.Start
         ) {
-            Icon(icon, contentDescription = null, tint = UtpPurplePrimary, modifier = Modifier.size(20.dp))
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = UtpPurplePrimary,
+                modifier = Modifier.size(20.dp)
+            )
             Spacer(modifier = Modifier.height(4.dp))
-            Text(text = count, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = UtpTextPrimary)
-            Text(text = title, fontSize = 11.sp, color = UtpTextSecondary)
+            Text(
+                text = count,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = UtpTextPrimary
+            )
+            Text(
+                text = title,
+                fontSize = 11.sp,
+                color = UtpTextSecondary
+            )
         }
     }
 }
 
+// Componente para representar una Unidad Pedagógica e interactuar con ella
 @Composable
-fun AdminAccessCard(
-    title: String,
-    subtitle: String,
-    icon: ImageVector,
-    onClick: () -> Unit
+fun UnidadPedagogicaCard(
+    unidad: UnidadPedagogica,
+    onAprobar: () -> Unit,
+    onPublicar: () -> Unit,
+    onDeshabilitar: () -> Unit,
+    onSolicitarRechazo: () -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = UtpCardBackground),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Surface(
-                shape = RoundedCornerShape(8.dp),
-                color = UtpOrangeSoft,
-                modifier = Modifier.size(36.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(icon, contentDescription = null, tint = UtpOrangeHighlight, modifier = Modifier.size(20.dp))
-                }
-            }
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = title, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = UtpTextPrimary)
-                Text(text = subtitle, fontSize = 11.sp, color = UtpTextSecondary)
-            }
-            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = UtpTextSecondary)
-        }
-    }
-}
-
-@Composable
-fun TeacherInChargeItem(name: String, details: String, subject: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = UtpCardBackground),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Surface(
-                shape = CircleShape,
-                color = UtpOrangeSoft,
-                modifier = Modifier.size(36.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(text = name.take(1), fontWeight = FontWeight.Bold, color = UtpOrangeHighlight)
-                }
-            }
-            Spacer(modifier = Modifier.width(10.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = name, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = UtpTextPrimary)
-                Text(text = details, fontSize = 11.sp, color = UtpTextSecondary)
-            }
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = UtpOrangeSoft
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = subject,
-                    color = UtpOrangeHighlight,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                    text = "Unidad ${unidad.numero}: ${unidad.titulo}",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = UtpTextPrimary,
+                    modifier = Modifier.weight(1f)
                 )
+
+                // Badge de Estado
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = when(unidad.estado) {
+                        EstadoContenido.APROBADO -> UtpBadgeGreenBg
+                        EstadoContenido.PUBLICADO -> UtpBadgeBlueBg
+                        EstadoContenido.RECHAZADO -> UtpBadgeRedBg
+                        else -> UtpOrangeSoft
+                    }
+                ) {
+                    Text(
+                        text = unidad.estado.name,
+                        color = when(unidad.estado) {
+                            EstadoContenido.APROBADO -> UtpBadgeGreenText
+                            EstadoContenido.PUBLICADO -> UtpBadgeBlueText
+                            EstadoContenido.RECHAZADO -> UtpBadgeRedText
+                            else -> UtpOrangeHighlight
+                        },
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(text = unidad.descripcion, fontSize = 12.sp, color = UtpTextSecondary)
+
+            if (!unidad.observacionesUTP.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "Observación UTP: ${unidad.observacionesUTP}",
+                    fontSize = 11.sp,
+                    color = UtpBadgeRedText,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Botones de Flujo UTP
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Button(
+                    onClick = onAprobar,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = UtpBadgeGreenText)
+                ) {
+                    Text("Aprobar", fontSize = 10.sp)
+                }
+
+                Button(
+                    onClick = onPublicar,
+                    modifier = Modifier.weight(1f),
+                    enabled = unidad.estado == EstadoContenido.APROBADO,
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("Publicar", fontSize = 10.sp)
+                }
+
+                OutlinedButton(
+                    onClick = onSolicitarRechazo,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("Rechazar", fontSize = 10.sp, color = UtpBadgeRedText)
+                }
+
+                IconButton(onClick = onDeshabilitar, modifier = Modifier.size(36.dp)) {
+                    Icon(Icons.Default.Clear, contentDescription = "Deshabilitar", tint = Color.Gray)
+                }
             }
         }
     }

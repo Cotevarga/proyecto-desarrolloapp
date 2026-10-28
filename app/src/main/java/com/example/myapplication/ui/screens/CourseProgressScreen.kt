@@ -1,5 +1,7 @@
 package com.example.myapplication.ui.screens
 
+import com.example.myapplication.ui.model.EstadoContenido
+import com.example.myapplication.ui.repository.UtpRepository
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
