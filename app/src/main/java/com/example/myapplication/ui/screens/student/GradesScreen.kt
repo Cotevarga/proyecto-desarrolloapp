@@ -1,4 +1,4 @@
-package com.example.myapplication.ui.screens
+package com.example.myapplication.ui.screens.student
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable

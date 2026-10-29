@@ -1,4 +1,4 @@
-package com.example.myapplication.ui.screens
+package com.example.myapplication.ui.screens.student
 
 import android.widget.Toast
 import androidx.compose.foundation.background

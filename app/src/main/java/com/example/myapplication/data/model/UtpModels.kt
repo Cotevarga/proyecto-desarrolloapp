@@ -1,4 +1,4 @@
-package com.example.myapplication.ui.model
+package com.example.myapplication.data.model
 
 // Estados permitidos para el flujo de validación UTP
 enum class EstadoContenido {

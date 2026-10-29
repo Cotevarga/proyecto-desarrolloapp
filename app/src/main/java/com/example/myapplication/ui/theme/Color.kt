@@ -20,3 +20,6 @@ val UtpBadgeBlueText = Color(0xFF0284C7)
 val UtpDbBadgeBg = Color(0xFFFFF1E6)
 val UtpDbBadgeBorder = Color(0xFFF97316)
 val UtpDbBadgeText = Color(0xFFC2410C)
+
+// Color Celeste Institucional Unificado
+val UtpCelestePrimary = Color(0xFF0284C7)

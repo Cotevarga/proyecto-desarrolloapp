@@ -2,7 +2,6 @@ package com.example.myapplication.ui.screens
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -10,148 +9,213 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.myapplication.ui.theme.UtpOrangeHighlight
-import com.example.myapplication.ui.theme.UtpPurplePrimary
+import androidx.navigation.navArgument
 
-sealed class BottomNavItem(val route: String, val title: String, val icon: ImageVector) {
-    object Home : BottomNavItem("home", "Inicio", Icons.Default.Home)
-    object Docente : BottomNavItem("teacher_home", "Docente", Icons.Default.Person)
-    object Panel : BottomNavItem("admin_subjects", "Panel", Icons.Default.Dashboard)
-    object Biblioteca : BottomNavItem("library", "Biblioteca", Icons.AutoMirrored.Filled.MenuBook)
-    object Publicacion : BottomNavItem("review_publish", "Publicar", Icons.Default.Publish)
+import com.example.myapplication.ui.screens.jefatura.AdminSubjectsScreen
+import com.example.myapplication.ui.screens.jefatura.HistorialCambiosScreen
+import com.example.myapplication.ui.screens.jefatura.JefaturaHomeScreen
+import com.example.myapplication.ui.screens.jefatura.JefaturaSettingsScreen
+import com.example.myapplication.ui.screens.jefatura.ReviewPublishScreen
+import com.example.myapplication.ui.screens.jefatura.SolicitudesMateriaScreen
+import com.example.myapplication.ui.screens.jefatura.UnitEditorScreen
+import com.example.myapplication.ui.screens.student.GradesScreen
+import com.example.myapplication.ui.screens.student.HomeScreen
+import com.example.myapplication.ui.screens.student.ScheduleScreen
+import com.example.myapplication.ui.screens.teacher.CourseProgressScreen
+import com.example.myapplication.ui.screens.teacher.TeacherHomeScreen
+import com.example.myapplication.ui.screens.teacher.TeacherLibraryScreen
+
+// Tono Celeste Unificado
+val UtpCelesteAccent = Color(0xFF0284C7)
+
+sealed class NavTabItem(val route: String, val title: String, val icon: ImageVector) {
+    object UtpInicio : NavTabItem("utp_inicio", "Inicio", Icons.Default.Home)
+    object UtpPanel : NavTabItem("admin_subjects", "Panel", Icons.Default.Dashboard)
+    object UtpHistorial : NavTabItem("utp_historial", "Historial", Icons.Default.ListAlt)
+    object UtpPublicar : NavTabItem("review_publish", "Publicar", Icons.Default.Publish)
+
+    object TeacherInicio : NavTabItem("teacher_home", "Inicio", Icons.Default.Home)
+    object TeacherBiblioteca : NavTabItem("teacher_library", "Biblioteca", Icons.Default.Book)
+    object TeacherProgreso : NavTabItem("teacher_progress", "Progreso", Icons.Default.Analytics)
+
+    object StudentInicio : NavTabItem("student_home", "Inicio", Icons.Default.Home)
+    object StudentNotas : NavTabItem("student_grades", "Mis Notas", Icons.Default.Grade)
+    object StudentHorario : NavTabItem("student_schedule", "Horario", Icons.Default.DateRange)
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
+    userRole: String = "JEFATURA",
     onLogout: () -> Unit
 ) {
     val navController = rememberNavController()
-    val navItems = listOf(
-        BottomNavItem.Home,
-        BottomNavItem.Docente,
-        BottomNavItem.Panel,
-        BottomNavItem.Biblioteca,
-        BottomNavItem.Publicacion
-    )
+
+    val tabs = remember(userRole) {
+        when (userRole.uppercase()) {
+            "ALUMNO" -> listOf(
+                NavTabItem.StudentInicio,
+                NavTabItem.StudentNotas,
+                NavTabItem.StudentHorario
+            )
+            "DOCENTE" -> listOf(
+                NavTabItem.TeacherInicio,
+                NavTabItem.TeacherBiblioteca,
+                NavTabItem.TeacherProgreso
+            )
+            else -> listOf(
+                NavTabItem.UtpInicio,
+                NavTabItem.UtpPanel,
+                NavTabItem.UtpHistorial,
+                NavTabItem.UtpPublicar
+            )
+        }
+    }
+
+    val startRoute = tabs.first().route
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    // Ocultar barra inferior en pantallas secundarias de Jefatura
+    val esPantallaSecundaria = currentRoute?.startsWith("solicitudes_materia") == true ||
+            currentRoute == "unit_editor" ||
+            currentRoute == "jefatura_settings"
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Portal UTP Academic", color = Color.White) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = UtpOrangeHighlight),
-                actions = {
-                    IconButton(onClick = onLogout) {
-                        Icon(Icons.Default.ExitToApp, contentDescription = "Cerrar Sesión", tint = Color.White)
-                    }
-                }
-            )
-        },
         bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface
-            ) {
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentRoute = navBackStackEntry?.destination?.route
+            if (!esPantallaSecundaria) {
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ) {
+                    tabs.forEach { tab ->
+                        val isSelected = currentRoute == tab.route
 
-                navItems.forEach { item ->
-                    NavigationBarItem(
-                        icon = { Icon(item.icon, contentDescription = item.title) },
-                        label = { Text(item.title) },
-                        selected = currentRoute == item.route,
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = UtpOrangeHighlight,
-                            selectedTextColor = UtpOrangeHighlight,
-                            indicatorColor = UtpOrangeHighlight.copy(alpha = 0.1f)
-                        ),
-                        onClick = {
-                            if (currentRoute != item.route) {
-                                navController.navigate(item.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
+                        NavigationBarItem(
+                            icon = { Icon(tab.icon, contentDescription = tab.title) },
+                            label = { Text(tab.title) },
+                            selected = isSelected,
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = UtpCelesteAccent,
+                                selectedTextColor = UtpCelesteAccent,
+                                indicatorColor = UtpCelesteAccent.copy(alpha = 0.15f)
+                            ),
+                            onClick = {
+                                if (!isSelected) {
+                                    navController.navigate(tab.route) {
+                                        popUpTo(navController.graph.findStartDestination().id) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = (tab.route != startRoute)
                                     }
-                                    launchSingleTop = true
-                                    restoreState = true
                                 }
                             }
-                        }
-                    )
+                        )
+                    }
                 }
             }
         }
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = BottomNavItem.Home.route,
+            startDestination = startRoute,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(BottomNavItem.Home.route) {
-                JefaturaHomeScreen(onNavigateTo = { route -> navController.navigate(route) })
+            // --- JEFATURA UTP ---
+            composable(NavTabItem.UtpInicio.route) {
+                JefaturaHomeScreen(
+                    onNavigateTo = { route -> navController.navigate(route) },
+                    onAccountSettings = { navController.navigate("jefatura_settings") },
+                    onLogout = onLogout
+                )
             }
-            composable(BottomNavItem.Docente.route) {
-                TeacherHomeScreen(onNavigateTo = { route -> navController.navigate(route) })
-            }
-            composable(BottomNavItem.Panel.route) {
+
+            composable(NavTabItem.UtpPanel.route) {
                 AdminSubjectsScreen(
                     onBack = { navController.popBackStack() },
-                    onSelectSubject = { navController.navigate("unit_editor") }
+                    onSelectSubject = { subjectName ->
+                        navController.navigate("solicitudes_materia/$subjectName")
+                    },
+                    onAccountSettings = { navController.navigate("jefatura_settings") },
+                    onLogout = onLogout
                 )
             }
-            composable(BottomNavItem.Biblioteca.route) {
-                TeacherLibraryScreen(
-                    onBack = { navController.popBackStack() },
-                    onSelectObjective = { navController.navigate("assign_objectives") }
+
+            composable(NavTabItem.UtpHistorial.route) {
+                HistorialCambiosScreen(
+                    onAccountSettings = { navController.navigate("jefatura_settings") },
+                    onLogout = onLogout
                 )
             }
-            composable(BottomNavItem.Publicacion.route) {
+
+            composable(NavTabItem.UtpPublicar.route) {
                 ReviewPublishScreen(
-                    onBack = { navController.popBackStack() }
-                )
-            }
-            composable("admin_subjects") {
-                AdminSubjectsScreen(
                     onBack = { navController.popBackStack() },
-                    onSelectSubject = { navController.navigate("unit_editor") }
+                    onEditUnit = { navController.navigate("unit_editor") },
+                    onAccountSettings = { navController.navigate("jefatura_settings") },
+                    onLogout = onLogout
                 )
             }
-            composable("teacher_home") {
-                TeacherHomeScreen(onNavigateTo = { route -> navController.navigate(route) })
-            }
-            composable("library") {
-                TeacherLibraryScreen(
+
+            // --- VISTAS SECUNDARIAS JEFATURA ---
+            composable("jefatura_settings") {
+                JefaturaSettingsScreen(
                     onBack = { navController.popBackStack() },
-                    onSelectObjective = { navController.navigate("assign_objectives") }
+                    onLogout = onLogout
                 )
             }
-            composable("assign_objectives") {
-                AssignObjectivesScreen(
+
+            composable(
+                route = "solicitudes_materia/{subjectName}",
+                arguments = listOf(navArgument("subjectName") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val subjectName = backStackEntry.arguments?.getString("subjectName") ?: "Lenguaje"
+                SolicitudesMateriaScreen(
+                    subjectName = subjectName,
                     onBack = { navController.popBackStack() },
-                    onAssignedSuccess = { navController.navigate("course_progress") }
+                    onAccountSettings = { navController.navigate("jefatura_settings") },
+                    onLogout = onLogout
                 )
             }
-            composable("course_progress") {
-                CourseProgressScreen(
-                    onBack = { navController.popBackStack() }
-                )
-            }
+
             composable("unit_editor") {
-                UnitEditorScreen(
-                    onBack = { navController.popBackStack() }
+                UnitEditorScreen(onBack = { navController.popBackStack() })
+            }
+
+            // --- DOCENTE ---
+            composable(NavTabItem.TeacherInicio.route) {
+                TeacherHomeScreen(
+                    onNavigateTo = { route -> navController.navigate(route) },
+                    onLogout = onLogout
                 )
             }
-            composable("review_publish") {
-                ReviewPublishScreen(
-                    onBack = { navController.popBackStack() }
+
+            composable(NavTabItem.TeacherBiblioteca.route) {
+                TeacherLibraryScreen(
+                    onBack = { navController.popBackStack() },
+                    onSelectObjective = { navController.navigate("assign_objectives") }
                 )
             }
-            composable("activity_detail") {
-                ActivityDetailScreen(
-                    onBack = { navController.popBackStack() }
-                )
+
+            composable(NavTabItem.TeacherProgreso.route) {
+                CourseProgressScreen(onBack = { navController.popBackStack() })
+            }
+
+            // --- ALUMNO ---
+            composable(NavTabItem.StudentInicio.route) {
+                HomeScreen(onNavigateToSection = { route -> navController.navigate(route) })
+            }
+
+            composable(NavTabItem.StudentNotas.route) {
+                GradesScreen(onBack = { navController.popBackStack() })
+            }
+
+            composable(NavTabItem.StudentHorario.route) {
+                ScheduleScreen(onBack = { navController.popBackStack() })
             }
         }
     }

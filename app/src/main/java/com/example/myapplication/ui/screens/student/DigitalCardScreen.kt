@@ -1,6 +1,5 @@
-package com.example.myapplication.ui.screens
+package com.example.myapplication.ui.screens.student
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape

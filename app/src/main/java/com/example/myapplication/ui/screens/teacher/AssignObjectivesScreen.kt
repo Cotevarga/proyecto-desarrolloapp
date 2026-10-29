@@ -1,7 +1,5 @@
-package com.example.myapplication.ui.screens
+package com.example.myapplication.ui.screens.teacher
 
-import com.example.myapplication.ui.model.ObjetivoAprendizaje
-import com.example.myapplication.ui.repository.UtpRepository
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
