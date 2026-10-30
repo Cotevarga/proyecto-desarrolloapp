@@ -16,33 +16,27 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 
-import com.example.myapplication.ui.screens.jefatura.AdminSubjectsScreen
-import com.example.myapplication.ui.screens.jefatura.HistorialCambiosScreen
-import com.example.myapplication.ui.screens.jefatura.JefaturaHomeScreen
-import com.example.myapplication.ui.screens.jefatura.JefaturaSettingsScreen
-import com.example.myapplication.ui.screens.jefatura.ReviewPublishScreen
-import com.example.myapplication.ui.screens.jefatura.SolicitudesMateriaScreen
-import com.example.myapplication.ui.screens.jefatura.UnitEditorScreen
-import com.example.myapplication.ui.screens.student.GradesScreen
-import com.example.myapplication.ui.screens.student.HomeScreen
-import com.example.myapplication.ui.screens.student.ScheduleScreen
-import com.example.myapplication.ui.screens.teacher.CourseProgressScreen
-import com.example.myapplication.ui.screens.teacher.TeacherHomeScreen
-import com.example.myapplication.ui.screens.teacher.TeacherLibraryScreen
+import com.example.myapplication.data.model.EstudianteAvance
+import com.example.myapplication.ui.screens.jefatura.*
+import com.example.myapplication.ui.screens.student.*
+import com.example.myapplication.ui.screens.teacher.*
 
-// Tono Celeste Unificado
 val UtpCelesteAccent = Color(0xFF0284C7)
 
 sealed class NavTabItem(val route: String, val title: String, val icon: ImageVector) {
+    // Jefatura UTP
     object UtpInicio : NavTabItem("utp_inicio", "Inicio", Icons.Default.Home)
     object UtpPanel : NavTabItem("admin_subjects", "Panel", Icons.Default.Dashboard)
     object UtpHistorial : NavTabItem("utp_historial", "Historial", Icons.Default.ListAlt)
     object UtpPublicar : NavTabItem("review_publish", "Publicar", Icons.Default.Publish)
 
-    object TeacherInicio : NavTabItem("teacher_home", "Inicio", Icons.Default.Home)
-    object TeacherBiblioteca : NavTabItem("teacher_library", "Biblioteca", Icons.Default.Book)
-    object TeacherProgreso : NavTabItem("teacher_progress", "Progreso", Icons.Default.Analytics)
+    // Docente (4 Vistas Principales)
+    object TeacherHome : NavTabItem("teacher_home", "Home", Icons.Default.Home)
+    object TeacherPermisos : NavTabItem("teacher_permissions", "Permisos", Icons.Default.AssignmentTurnedIn)
+    object TeacherClases : NavTabItem("teacher_classes", "Clases", Icons.Default.Class)
+    object TeacherAlumnos : NavTabItem("teacher_students", "Alumnos", Icons.Default.People)
 
+    // Alumno
     object StudentInicio : NavTabItem("student_home", "Inicio", Icons.Default.Home)
     object StudentNotas : NavTabItem("student_grades", "Mis Notas", Icons.Default.Grade)
     object StudentHorario : NavTabItem("student_schedule", "Horario", Icons.Default.DateRange)
@@ -63,9 +57,10 @@ fun MainScreen(
                 NavTabItem.StudentHorario
             )
             "DOCENTE" -> listOf(
-                NavTabItem.TeacherInicio,
-                NavTabItem.TeacherBiblioteca,
-                NavTabItem.TeacherProgreso
+                NavTabItem.TeacherHome,
+                NavTabItem.TeacherPermisos,
+                NavTabItem.TeacherClases,
+                NavTabItem.TeacherAlumnos
             )
             else -> listOf(
                 NavTabItem.UtpInicio,
@@ -80,10 +75,12 @@ fun MainScreen(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Ocultar barra inferior en pantallas secundarias de Jefatura
     val esPantallaSecundaria = currentRoute?.startsWith("solicitudes_materia") == true ||
+            currentRoute?.startsWith("student_report") == true ||
             currentRoute == "unit_editor" ||
-            currentRoute == "jefatura_settings"
+            currentRoute == "jefatura_settings" ||
+            currentRoute == "assign_objectives" ||
+            currentRoute == "student_search"
 
     Scaffold(
         bottomBar = {
@@ -161,48 +158,57 @@ fun MainScreen(
                 )
             }
 
-            // --- VISTAS SECUNDARIAS JEFATURA ---
-            composable("jefatura_settings") {
-                JefaturaSettingsScreen(
-                    onBack = { navController.popBackStack() },
-                    onLogout = onLogout
-                )
-            }
-
-            composable(
-                route = "solicitudes_materia/{subjectName}",
-                arguments = listOf(navArgument("subjectName") { type = NavType.StringType })
-            ) { backStackEntry ->
-                val subjectName = backStackEntry.arguments?.getString("subjectName") ?: "Lenguaje"
-                SolicitudesMateriaScreen(
-                    subjectName = subjectName,
-                    onBack = { navController.popBackStack() },
-                    onAccountSettings = { navController.navigate("jefatura_settings") },
-                    onLogout = onLogout
-                )
-            }
-
-            composable("unit_editor") {
-                UnitEditorScreen(onBack = { navController.popBackStack() })
-            }
-
-            // --- DOCENTE ---
-            composable(NavTabItem.TeacherInicio.route) {
+            // --- DOCENTE (4 VISTAS PRINCIPALES) ---
+            composable(NavTabItem.TeacherHome.route) {
                 TeacherHomeScreen(
                     onNavigateTo = { route -> navController.navigate(route) },
                     onLogout = onLogout
                 )
             }
 
-            composable(NavTabItem.TeacherBiblioteca.route) {
-                TeacherLibraryScreen(
-                    onBack = { navController.popBackStack() },
-                    onSelectObjective = { navController.navigate("assign_objectives") }
+            composable(NavTabItem.TeacherPermisos.route) {
+                TeacherPermissionsScreen(
+                    onLogout = onLogout
                 )
             }
 
-            composable(NavTabItem.TeacherProgreso.route) {
-                CourseProgressScreen(onBack = { navController.popBackStack() })
+            composable(NavTabItem.TeacherClases.route) {
+                TeacherLibraryScreen(
+                    onBack = { navController.popBackStack() },
+                    onSelectObjective = { navController.navigate("assign_objectives") },
+                    onLogout = onLogout
+                )
+            }
+
+            composable(NavTabItem.TeacherAlumnos.route) {
+                CourseProgressScreen(
+                    onBack = { navController.popBackStack() },
+                    onSelectStudentReport = { est: EstudianteAvance ->
+                        navController.navigate("student_report/${est.nombre}")
+                    },
+                    onLogout = onLogout
+                )
+            }
+
+            // --- VISTAS SECUNDARIAS DOCENTE ---
+            composable("assign_objectives") {
+                AssignObjectivesScreen(
+                    onBack = { navController.popBackStack() },
+                    onAssignedSuccess = { navController.navigate(NavTabItem.TeacherAlumnos.route) },
+                    onLogout = onLogout
+                )
+            }
+
+            composable(
+                route = "student_report/{studentName}",
+                arguments = listOf(navArgument("studentName") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val studentName = backStackEntry.arguments?.getString("studentName") ?: "Lucas Morales"
+                StudentReportScreen(
+                    studentName = studentName,
+                    onBack = { navController.popBackStack() },
+                    onLogout = onLogout
+                )
             }
 
             // --- ALUMNO ---

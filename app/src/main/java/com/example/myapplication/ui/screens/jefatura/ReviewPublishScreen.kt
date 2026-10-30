@@ -76,7 +76,6 @@ fun ReviewPublishScreen(
 
     Box(modifier = Modifier.fillMaxSize().background(UtpWarmBackground)) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // CABECERA UNIFICADA DE PORTAL + PERFIL CON ACCIONES
             UtpTopHeaderBar(
                 userName = "Prof. Carolina M.",
                 userRole = "Jefatura de UTP",
@@ -93,7 +92,6 @@ fun ReviewPublishScreen(
             ) {
                 item { Spacer(modifier = Modifier.height(4.dp)) }
 
-                // 1. SEGMENTADOR DE CURSOS
                 item {
                     Surface(
                         shape = RoundedCornerShape(12.dp),
@@ -104,11 +102,9 @@ fun ReviewPublishScreen(
                         Row(modifier = Modifier.padding(4.dp)) {
                             listOf("Todos", "1° A", "1° B").forEach { curso ->
                                 val isSelected = cursoFiltro == curso
-
                                 val containerColor = when {
                                     !isSelected -> Color.Transparent
                                     curso == "1° A" -> UtpOrangeHighlight
-                                    curso == "1° B" -> UtpPurplePrimary
                                     else -> UtpPurplePrimary
                                 }
 
@@ -133,7 +129,6 @@ fun ReviewPublishScreen(
                     }
                 }
 
-                // 2. CARRUSEL HORIZONTAL DE MATERIAS
                 item {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -146,9 +141,12 @@ fun ReviewPublishScreen(
                             fontWeight = FontWeight.Bold,
                             color = UtpTextSecondary
                         )
-                        TextTextButton(
+                        Text(
                             text = if (materiaFiltro != null) "Ver todas" else "Filtradas",
-                            onClick = { materiaFiltro = null }
+                            fontSize = 12.sp,
+                            color = UtpPurplePrimary,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.clickable { materiaFiltro = null }
                         )
                     }
 
@@ -157,7 +155,6 @@ fun ReviewPublishScreen(
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         items(AsignaturaUTP.values().toList()) { asig ->
                             val isSelected = materiaFiltro == asig
-
                             val cantidadPub = unidades.count { unidad ->
                                 val esMismaMateria = unidad.asignatura == asig
                                 val coincideCurso = when (cursoFiltro) {
@@ -169,9 +166,7 @@ fun ReviewPublishScreen(
                             }
 
                             Card(
-                                modifier = Modifier.clickable {
-                                    materiaFiltro = if (isSelected) null else asig
-                                },
+                                modifier = Modifier.clickable { materiaFiltro = if (isSelected) null else asig },
                                 shape = RoundedCornerShape(14.dp),
                                 colors = CardDefaults.cardColors(
                                     containerColor = if (isSelected) UtpPurpleSoft else UtpCardBackground
@@ -189,7 +184,7 @@ fun ReviewPublishScreen(
                                     ) {
                                         Box(contentAlignment = Alignment.Center) {
                                             Icon(
-                                                getIconForAsignatura(asig),
+                                                imageVector = getIconForAsignatura(asig),
                                                 contentDescription = null,
                                                 tint = if (isSelected) Color.White else UtpBadgeBlueText,
                                                 modifier = Modifier.size(18.dp)
@@ -198,17 +193,8 @@ fun ReviewPublishScreen(
                                     }
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Column {
-                                        Text(
-                                            text = asig.displayName,
-                                            fontSize = 13.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = UtpTextPrimary
-                                        )
-                                        Text(
-                                            text = "$cantidadPub pub.",
-                                            fontSize = 10.sp,
-                                            color = UtpTextSecondary
-                                        )
+                                        Text(asig.displayName, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = UtpTextPrimary)
+                                        Text("$cantidadPub pub.", fontSize = 10.sp, color = UtpTextSecondary)
                                     }
                                 }
                             }
@@ -216,7 +202,6 @@ fun ReviewPublishScreen(
                     }
                 }
 
-                // 3. CHIPS DE TIPO DE CONTENIDO
                 item {
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         items(FiltroMuroTipo.values().toList()) { tipo ->
@@ -224,9 +209,7 @@ fun ReviewPublishScreen(
                                 selected = tipoFiltro == tipo,
                                 onClick = { tipoFiltro = tipo },
                                 label = { Text(tipo.label, fontSize = 12.sp) },
-                                leadingIcon = {
-                                    Icon(tipo.icon, contentDescription = null, modifier = Modifier.size(14.dp))
-                                },
+                                leadingIcon = { Icon(tipo.icon, contentDescription = null, modifier = Modifier.size(14.dp)) },
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = UtpPurplePrimary,
                                     selectedLabelColor = Color.White,
@@ -237,7 +220,6 @@ fun ReviewPublishScreen(
                     }
                 }
 
-                // 4. BARRA DE BÚSQUEDA
                 item {
                     OutlinedTextField(
                         value = textoBusqueda,
@@ -261,7 +243,6 @@ fun ReviewPublishScreen(
                     )
                 }
 
-                // 5. FEED DE PUBLICACIONES
                 if (muroPublicaciones.isEmpty()) {
                     item {
                         Card(
@@ -298,13 +279,10 @@ fun ReviewPublishScreen(
                     }
                 }
 
-                item {
-                    Spacer(modifier = Modifier.height(80.dp))
-                }
+                item { Spacer(modifier = Modifier.height(100.dp)) }
             }
         }
 
-        // FAB CREAR
         FloatingActionButton(
             onClick = onEditUnit,
             modifier = Modifier
@@ -317,7 +295,6 @@ fun ReviewPublishScreen(
             Icon(Icons.Default.Add, contentDescription = "Crear Contenido")
         }
 
-        // DIÁLOGO DETALLE
         unidadDetalleSeleccionada?.let { unidad ->
             AlertDialog(
                 onDismissRequest = { unidadDetalleSeleccionada = null },
@@ -341,7 +318,6 @@ fun ReviewPublishScreen(
     }
 }
 
-// TARJETA INDIVIDUAL PARA LAS PUBLICACIONES DEL FEED
 @Composable
 fun MuroPostCard(
     unidad: UnidadPedagogica,
@@ -457,17 +433,6 @@ fun MuroPostCard(
             }
         }
     }
-}
-
-@Composable
-fun TextTextButton(text: String, onClick: () -> Unit) {
-    Text(
-        text = text,
-        fontSize = 12.sp,
-        color = UtpPurplePrimary,
-        fontWeight = FontWeight.Bold,
-        modifier = Modifier.clickable(onClick = onClick)
-    )
 }
 
 private fun getIconForAsignatura(asignatura: AsignaturaUTP): ImageVector {
