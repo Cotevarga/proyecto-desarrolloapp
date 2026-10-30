@@ -51,9 +51,42 @@ class TeacherRepository {
     fun getEstudiantesPorDocente(docenteId: String): List<EstudianteAvance> {
         val docente = getDocenteById(docenteId)
         val todos = listOf(
-            EstudianteAvance("1", "Camila Morales", "24.123.456-1", "1° A", "3/3 Completados", "Finalizado", "4/5 Correctas (80%)", emptyList()),
-            EstudianteAvance("2", "Carlos Silva", "24.234.567-2", "1° A", "1/3 Completados", "Pendiente", "Sin rendir", emptyList()),
-            EstudianteAvance("3", "Carolina Fuentes", "24.345.678-3", "1° B", "3/3 Completados", "Finalizado", "5/5 Correctas (100%)", emptyList())
+            EstudianteAvance(
+                id = "1",
+                nombre = "Camila Morales",
+                rut = "24.123.456-1",
+                curso = "1° A",
+                oa = "OA1 - Matemática",
+                avance = "100%",
+                estado = "Completado",
+                desafiosCompletados = "3/3 Completados",
+                estadoDesafios = "Finalizado",
+                pruebaPuntaje = "4/5 Correctas (80%)"
+            ),
+            EstudianteAvance(
+                id = "2",
+                nombre = "Carlos Silva",
+                rut = "24.234.567-2",
+                curso = "1° A",
+                oa = "OA1 - Matemática",
+                avance = "35%",
+                estado = "En Progreso",
+                desafiosCompletados = "1/3 Completados",
+                estadoDesafios = "Pendiente",
+                pruebaPuntaje = "Sin rendir"
+            ),
+            EstudianteAvance(
+                id = "3",
+                nombre = "Carolina Fuentes",
+                rut = "24.345.678-3",
+                curso = "1° B",
+                oa = "OA1 - Matemática",
+                avance = "100%",
+                estado = "Completado",
+                desafiosCompletados = "3/3 Completados",
+                estadoDesafios = "Finalizado",
+                pruebaPuntaje = "5/5 Correctas (100%)"
+            )
         )
         return todos.filter { docente.seccionesAsignadas.contains(it.curso) }
     }

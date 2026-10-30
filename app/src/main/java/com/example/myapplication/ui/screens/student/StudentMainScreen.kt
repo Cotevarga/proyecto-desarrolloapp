@@ -34,15 +34,16 @@ fun StudentMainScreen(
         },
         bottomBar = {
             if (currentSubScreen == "main") {
-                NavigationBar(containerColor = UtpCardBackground) {
+                NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
                     NavigationBarItem(
                         icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
                         label = { Text("Home") },
                         selected = selectedTab == "home",
                         onClick = { selectedTab = "home" },
                         colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = UtpPurplePrimary,
-                            selectedTextColor = UtpPurplePrimary
+                            selectedIconColor = UtpRed,
+                            selectedTextColor = UtpRed,
+                            indicatorColor = UtpRed.copy(alpha = 0.15f)
                         )
                     )
                     NavigationBarItem(
@@ -51,8 +52,9 @@ fun StudentMainScreen(
                         selected = selectedTab == "contenido",
                         onClick = { selectedTab = "contenido" },
                         colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = UtpPurplePrimary,
-                            selectedTextColor = UtpPurplePrimary
+                            selectedIconColor = UtpRed,
+                            selectedTextColor = UtpRed,
+                            indicatorColor = UtpRed.copy(alpha = 0.15f)
                         )
                     )
                     NavigationBarItem(
@@ -61,8 +63,9 @@ fun StudentMainScreen(
                         selected = selectedTab == "notas",
                         onClick = { selectedTab = "notas" },
                         colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = UtpPurplePrimary,
-                            selectedTextColor = UtpPurplePrimary
+                            selectedIconColor = UtpRed,
+                            selectedTextColor = UtpRed,
+                            indicatorColor = UtpRed.copy(alpha = 0.15f)
                         )
                     )
                     NavigationBarItem(
@@ -71,8 +74,9 @@ fun StudentMainScreen(
                         selected = selectedTab == "horario",
                         onClick = { selectedTab = "horario" },
                         colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = UtpPurplePrimary,
-                            selectedTextColor = UtpPurplePrimary
+                            selectedIconColor = UtpRed,
+                            selectedTextColor = UtpRed,
+                            indicatorColor = UtpRed.copy(alpha = 0.15f)
                         )
                     )
                 }
@@ -101,17 +105,21 @@ fun StudentMainScreen(
                 else -> {
                     when (selectedTab) {
                         "home" -> StudentHomeScreen(
-                            onSelectAsignatura = { selectedTab = "contenido" }
+                            onSelectAsignatura = { selectedTab = "contenido" },
+                            onLogout = onLogout // <-- AÑADIDO
                         )
                         "contenido" -> StudentUnitDetailScreen(
                             onBack = { selectedTab = "home" },
-                            onStartQuiz = { currentSubScreen = "quiz" }
+                            onStartQuiz = { currentSubScreen = "quiz" },
+                            onLogout = onLogout // <-- AÑADIDO
                         )
                         "notas" -> GradesScreen(
-                            onBack = { selectedTab = "home" }
+                            onBack = { selectedTab = "home" },
+                            onLogout = onLogout // <-- AÑADIDO
                         )
                         "horario" -> ScheduleScreen(
-                            onBack = { selectedTab = "home" }
+                            onBack = { selectedTab = "home" },
+                            onLogout = onLogout // <-- AÑADIDO
                         )
                     }
                 }

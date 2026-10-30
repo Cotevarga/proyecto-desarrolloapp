@@ -15,8 +15,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-
 import com.example.myapplication.data.model.EstudianteAvance
+
 import com.example.myapplication.ui.screens.jefatura.*
 import com.example.myapplication.ui.screens.student.*
 import com.example.myapplication.ui.screens.teacher.*
@@ -36,8 +36,9 @@ sealed class NavTabItem(val route: String, val title: String, val icon: ImageVec
     object TeacherClases : NavTabItem("teacher_classes", "Clases", Icons.Default.Class)
     object TeacherAlumnos : NavTabItem("teacher_students", "Alumnos", Icons.Default.People)
 
-    // Alumno
-    object StudentInicio : NavTabItem("student_home", "Inicio", Icons.Default.Home)
+    // Alumno (4 Pestañas)
+    object StudentInicio : NavTabItem("student_home", "Home", Icons.Default.Home)
+    object StudentContenido : NavTabItem("student_content", "Contenido", Icons.Default.Book)
     object StudentNotas : NavTabItem("student_grades", "Mis Notas", Icons.Default.Grade)
     object StudentHorario : NavTabItem("student_schedule", "Horario", Icons.Default.DateRange)
 }
@@ -53,6 +54,7 @@ fun MainScreen(
         when (userRole.uppercase()) {
             "ALUMNO" -> listOf(
                 NavTabItem.StudentInicio,
+                NavTabItem.StudentContenido,
                 NavTabItem.StudentNotas,
                 NavTabItem.StudentHorario
             )
@@ -82,7 +84,9 @@ fun MainScreen(
             currentRoute == "teacher_settings" ||
             currentRoute == "assign_objectives" ||
             currentRoute == "student_search" ||
-            currentRoute == "teacher_request"
+            currentRoute == "teacher_request" ||
+            currentRoute == "student_practice" ||
+            currentRoute == "student_quiz"
 
     Scaffold(
         bottomBar = {
@@ -260,15 +264,51 @@ fun MainScreen(
 
             // --- ALUMNO ---
             composable(NavTabItem.StudentInicio.route) {
-                HomeScreen(onNavigateToSection = { route -> navController.navigate(route) })
+                StudentHomeScreen(
+                    onSelectAsignatura = { navController.navigate(NavTabItem.StudentContenido.route) },
+                    onLogout = onLogout
+                )
+            }
+
+            composable(NavTabItem.StudentContenido.route) {
+                StudentUnitDetailScreen(
+                    onBack = { navController.popBackStack() },
+                    onStartQuiz = { navController.navigate("student_quiz") },
+                    onLogout = onLogout
+                )
             }
 
             composable(NavTabItem.StudentNotas.route) {
-                GradesScreen(onBack = { navController.popBackStack() })
+                GradesScreen(
+                    onBack = { navController.popBackStack() },
+                    onLogout = onLogout
+                )
             }
 
             composable(NavTabItem.StudentHorario.route) {
-                ScheduleScreen(onBack = { navController.popBackStack() })
+                ScheduleScreen(
+                    onBack = { navController.popBackStack() },
+                    onLogout = onLogout
+                )
+            }
+
+            // --- VISTAS SECUNDARIAS ALUMNO ---
+            composable("student_practice") {
+                StudentPracticeScreen(
+                    onComplete = { navController.navigate("student_quiz") },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable("student_quiz") {
+                StudentQuizScreen(
+                    onBack = { navController.popBackStack() },
+                    onFinishQuiz = {
+                        navController.navigate(NavTabItem.StudentInicio.route) {
+                            popUpTo(NavTabItem.StudentInicio.route) { inclusive = true }
+                        }
+                    }
+                )
             }
         }
     }

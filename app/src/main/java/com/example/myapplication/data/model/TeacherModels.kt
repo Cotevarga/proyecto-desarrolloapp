@@ -10,17 +10,6 @@ data class DocenteModel(
     val seccionesAsignadas: List<String>
 )
 
-data class EstudianteAvance(
-    val id: String,
-    val nombre: String,
-    val rut: String,
-    val curso: String,
-    val desafiosCompletados: String,
-    val estadoDesafios: String,
-    val pruebaPuntaje: String,
-    val preguntasDetalle: List<Pair<String, Boolean>>
-)
-
 data class ContenidoBiblioteca(
     val id: String,
     val asignatura: String,
@@ -29,8 +18,8 @@ data class ContenidoBiblioteca(
     val descripcion: String,
     val actividadesConteo: Int,
     val desafiosConteo: Int,
-    val pruebaConteo: Int,          // Nueva etiqueta
-    val multimediaConteo: Int,      // Nueva etiqueta
+    val pruebaConteo: Int,
+    val multimediaConteo: Int,
     val icon: ImageVector
 )
 

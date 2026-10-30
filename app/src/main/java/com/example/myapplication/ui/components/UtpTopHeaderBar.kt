@@ -16,19 +16,31 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.myapplication.ui.theme.UtpPurplePrimary
+import com.example.myapplication.ui.theme.*
 
 @Composable
 fun UtpTopHeaderBar(
-    userRole: String = "JEFATURA", // <- Cambiado a JEFATURA por defecto
-    userName: String = if (userRole.uppercase() == "DOCENTE") "Prof. María Angélica" else "Jefe UTP",
+    userRole: String = "JEFATURA",
+    userName: String = when (userRole.uppercase()) {
+        "DOCENTE" -> "Prof. María Angélica"
+        "ALUMNO" -> "Camila Morales (1° A)"
+        else -> "Jefe UTP"
+    },
     showBack: Boolean = false,
     onBack: () -> Unit = {},
     onAccountSettings: () -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
+    // COLOR DINÁMICO POR ROL
+    val backgroundColor = when (userRole.uppercase()) {
+        "ALUMNO" -> UtpRed                        // Rojo para Alumno
+        "JEFATURA" -> Color(0xFF0284C7)            // Celeste para Jefatura
+        "DOCENTE" -> UtpPurplePrimary             // Azul / Púrpura para Docente
+        else -> UtpPurplePrimary
+    }
+
     Surface(
-        color = UtpPurplePrimary,
+        color = backgroundColor,
         shadowElevation = 4.dp
     ) {
         Row(
@@ -83,7 +95,11 @@ fun UtpTopHeaderBar(
                             overflow = TextOverflow.Ellipsis
                         )
 
-                        val badgeText = if (userRole.uppercase() == "DOCENTE") "DOCENTE" else userRole.uppercase()
+                        val badgeText = when (userRole.uppercase()) {
+                            "DOCENTE" -> "PROFESOR"
+                            "ALUMNO" -> "ALUMNO"
+                            else -> "JEFATURA"
+                        }
                         Surface(
                             shape = RoundedCornerShape(4.dp),
                             color = Color.White.copy(alpha = 0.25f)
@@ -108,13 +124,15 @@ fun UtpTopHeaderBar(
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onAccountSettings) {
-                    Icon(
-                        imageVector = Icons.Default.Settings,
-                        contentDescription = "Configuración",
-                        tint = Color.White,
-                        modifier = Modifier.size(20.dp)
-                    )
+                if (userRole.uppercase() != "ALUMNO") {
+                    IconButton(onClick = onAccountSettings) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Configuración",
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
                 IconButton(onClick = onLogout) {
                     Icon(
