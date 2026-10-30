@@ -55,6 +55,8 @@ fun HistorialCambiosScreen(
     Box(modifier = Modifier.fillMaxSize().background(UtpWarmBackground)) {
         Column(modifier = Modifier.fillMaxSize()) {
             UtpTopHeaderBar(
+                userRole = "JEFATURA",
+                userName = "Jefe UTP",
                 showBack = false,
                 onAccountSettings = onAccountSettings,
                 onLogout = onLogout

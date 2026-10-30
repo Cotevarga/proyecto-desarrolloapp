@@ -88,8 +88,8 @@ fun SolicitudesMateriaScreen(
         Column(modifier = Modifier.fillMaxSize()) {
             UtpTopHeaderBar(
                 userRole = "JEFATURA",
-                showBack = true,
-                onBack = onBack,
+                userName = "Jefe UTP",
+                showBack = false,
                 onAccountSettings = onAccountSettings,
                 onLogout = onLogout
             )

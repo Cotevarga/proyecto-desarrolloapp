@@ -39,8 +39,8 @@ fun AdminSubjectsScreen(
         Column(modifier = Modifier.fillMaxSize()) {
             UtpTopHeaderBar(
                 userRole = "JEFATURA",
+                userName = "Jefe UTP",
                 showBack = false,
-                onBack = onBack,
                 onAccountSettings = onAccountSettings,
                 onLogout = onLogout
             )

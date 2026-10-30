@@ -30,7 +30,7 @@ sealed class NavTabItem(val route: String, val title: String, val icon: ImageVec
     object UtpHistorial : NavTabItem("utp_historial", "Historial", Icons.Default.ListAlt)
     object UtpPublicar : NavTabItem("review_publish", "Publicar", Icons.Default.Publish)
 
-    // Docente (4 Vistas Principales)
+    // Docente
     object TeacherHome : NavTabItem("teacher_home", "Home", Icons.Default.Home)
     object TeacherPermisos : NavTabItem("teacher_permissions", "Permisos", Icons.Default.AssignmentTurnedIn)
     object TeacherClases : NavTabItem("teacher_classes", "Clases", Icons.Default.Class)
@@ -79,8 +79,10 @@ fun MainScreen(
             currentRoute?.startsWith("student_report") == true ||
             currentRoute == "unit_editor" ||
             currentRoute == "jefatura_settings" ||
+            currentRoute == "teacher_settings" ||
             currentRoute == "assign_objectives" ||
-            currentRoute == "student_search"
+            currentRoute == "student_search" ||
+            currentRoute == "teacher_request"
 
     Scaffold(
         bottomBar = {
@@ -158,16 +160,45 @@ fun MainScreen(
                 )
             }
 
-            // --- DOCENTE (4 VISTAS PRINCIPALES) ---
+            // --- VISTAS SECUNDARIAS JEFATURA ---
+            composable("unit_editor") {
+                UnitEditorScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable("jefatura_settings") {
+                JefaturaSettingsScreen(
+                    onBack = { navController.popBackStack() },
+                    onLogout = onLogout
+                )
+            }
+
+            composable(
+                route = "solicitudes_materia/{subjectName}",
+                arguments = listOf(navArgument("subjectName") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val subjectName = backStackEntry.arguments?.getString("subjectName") ?: "Lenguaje"
+                SolicitudesMateriaScreen(
+                    subjectName = subjectName,
+                    onBack = { navController.popBackStack() },
+                    onAccountSettings = { navController.navigate("jefatura_settings") },
+                    onLogout = onLogout
+                )
+            }
+
+            // --- DOCENTE ---
             composable(NavTabItem.TeacherHome.route) {
                 TeacherHomeScreen(
                     onNavigateTo = { route -> navController.navigate(route) },
+                    onAccountSettings = { navController.navigate("teacher_settings") },
                     onLogout = onLogout
                 )
             }
 
             composable(NavTabItem.TeacherPermisos.route) {
                 TeacherPermissionsScreen(
+                    onAccountSettings = { navController.navigate("teacher_settings") },
                     onLogout = onLogout
                 )
             }
@@ -176,6 +207,8 @@ fun MainScreen(
                 TeacherLibraryScreen(
                     onBack = { navController.popBackStack() },
                     onSelectObjective = { navController.navigate("assign_objectives") },
+                    onRequestPermission = { navController.navigate("teacher_request") },
+                    onAccountSettings = { navController.navigate("teacher_settings") },
                     onLogout = onLogout
                 )
             }
@@ -186,16 +219,30 @@ fun MainScreen(
                     onSelectStudentReport = { est: EstudianteAvance ->
                         navController.navigate("student_report/${est.nombre}")
                     },
+                    onAccountSettings = { navController.navigate("teacher_settings") },
                     onLogout = onLogout
                 )
             }
 
             // --- VISTAS SECUNDARIAS DOCENTE ---
+            composable("teacher_settings") {
+                TeacherSettingsScreen(
+                    onBack = { navController.popBackStack() },
+                    onLogout = onLogout
+                )
+            }
+
             composable("assign_objectives") {
                 AssignObjectivesScreen(
                     onBack = { navController.popBackStack() },
                     onAssignedSuccess = { navController.navigate(NavTabItem.TeacherAlumnos.route) },
                     onLogout = onLogout
+                )
+            }
+
+            composable("teacher_request") {
+                TeacherRequestScreen(
+                    onBack = { navController.popBackStack() }
                 )
             }
 

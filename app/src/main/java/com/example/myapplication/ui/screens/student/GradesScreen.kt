@@ -18,7 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.myapplication.ui.theme.UtpRed
+import com.example.myapplication.ui.theme.*
 
 data class GradeDetail(
     val evaluationName: String,
@@ -41,39 +41,34 @@ fun GradesScreen(
     val courses = remember {
         listOf(
             CourseGrades(
-                1, "100000I68N", "Desarrollo de Apps Móviles", 17.5,
+                1, "MAT-1B", "Matemática", 6.8,
                 listOf(
-                    GradeDetail("Evaluación Continua 1 (EC1)", "20%", "18.0"),
-                    GradeDetail("Examen Parcial (EP)", "25%", "16.5"),
-                    GradeDetail("Evaluación Continua 2 (EC2)", "25%", "18.0"),
-                    GradeDetail("Examen Final (EF)", "30%", "Pendiente")
+                    GradeDetail("Guía N°1: Trazado del 1 al 5", "20%", "7.0"),
+                    GradeDetail("Guía N°2: Conteo de Elementos", "30%", "6.5"),
+                    GradeDetail("Desafío N°1: La Recta Numérica", "20%", "7.0"),
+                    GradeDetail("Evaluación Sumativa OA1", "30%", "Pendiente")
                 )
             ),
             CourseGrades(
-                2, "100000I72N", "Base de Datos Avanzada", 16.0,
+                2, "LEN-1B", "Lenguaje y Comunicación", 6.2,
                 listOf(
-                    GradeDetail("Evaluación Continua 1 (EC1)", "20%", "15.0"),
-                    GradeDetail("Examen Parcial (EP)", "25%", "17.0"),
-                    GradeDetail("Evaluación Continua 2 (EC2)", "25%", "16.0"),
-                    GradeDetail("Examen Final (EF)", "30%", "Pendiente")
+                    GradeDetail("Lectura de Vocales", "25%", "6.0"),
+                    GradeDetail("Escritura de Sílabas Iniciales", "25%", "6.5"),
+                    GradeDetail("Comprensión Lectora Guiada", "50%", "Pendiente")
                 )
             ),
             CourseGrades(
-                3, "100000I81N", "Ingeniería de Software II", 15.2,
+                3, "NAT-1B", "Ciencias Naturales", 6.5,
                 listOf(
-                    GradeDetail("Evaluación Continua 1 (EC1)", "20%", "14.0"),
-                    GradeDetail("Examen Parcial (EP)", "25%", "16.0"),
-                    GradeDetail("Evaluación Continua 2 (EC2)", "25%", "15.5"),
-                    GradeDetail("Examen Final (EF)", "30%", "Pendiente")
+                    GradeDetail("Actividad: Los Cinco Sentidos", "40%", "6.8"),
+                    GradeDetail("Ficha: Animales y su Hábitat", "60%", "6.2")
                 )
             ),
             CourseGrades(
-                4, "100000I55N", "Arquitectura de Computadores", 14.8,
+                4, "HIS-1B", "Historia, Geografía y C. Soc.", 7.0,
                 listOf(
-                    GradeDetail("Evaluación Continua 1 (EC1)", "20%", "13.5"),
-                    GradeDetail("Examen Parcial (EP)", "25%", "15.0"),
-                    GradeDetail("Evaluación Continua 2 (EC2)", "25%", "15.5"),
-                    GradeDetail("Examen Final (EF)", "30%", "Pendiente")
+                    GradeDetail("Dibujo: Mi Familia y Comunidad", "50%", "7.0"),
+                    GradeDetail("Ubicación en el Tiempo (Días)", "50%", "7.0")
                 )
             )
         )
@@ -96,18 +91,18 @@ fun GradesScreen(
             }
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Mis Cursos y Notas",
-                fontSize = 22.sp,
+                text = "Mis Notas",
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
+                color = UtpTextPrimary
             )
         }
 
         Text(
-            text = "Periodo Académico 2026-1",
-            fontSize = 14.sp,
-            color = Color.Gray,
-            modifier = Modifier.padding(start = 48.dp, bottom = 16.dp)
+            text = "Año Académico 2026 • 1° Año A",
+            fontSize = 12.sp,
+            color = UtpTextSecondary,
+            modifier = Modifier.padding(start = 48.dp, bottom = 14.dp)
         )
 
         LazyColumn(
@@ -116,6 +111,7 @@ fun GradesScreen(
             items(courses) { course ->
                 CourseGradeCard(course = course)
             }
+            item { Spacer(modifier = Modifier.height(60.dp)) }
         }
     }
 }
@@ -128,9 +124,9 @@ fun CourseGradeCard(course: CourseGrades) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable { expanded = !expanded },
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = UtpCardBackground),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -141,13 +137,14 @@ fun CourseGradeCard(course: CourseGrades) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = course.courseCode,
-                        fontSize = 12.sp,
-                        color = Color.Gray
+                        fontSize = 11.sp,
+                        color = UtpTextSecondary
                     )
                     Text(
                         text = course.courseName,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
+                        fontSize = 15.sp,
+                        color = UtpTextPrimary
                     )
                 }
 
@@ -155,56 +152,57 @@ fun CourseGradeCard(course: CourseGrades) {
 
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = if (course.averageGrade >= 12.0) Color(0xFFE8F5E9) else Color(0xFFFFEBEE)
+                    color = if (course.averageGrade >= 4.0) UtpBadgeGreenBg else Color(0xFFFEE2E2)
                 ) {
                     Text(
                         text = "Prom: ${course.averageGrade}",
-                        color = if (course.averageGrade >= 12.0) Color(0xFF2E7D32) else UtpRed,
-                        fontSize = 14.sp,
+                        color = if (course.averageGrade >= 4.0) UtpBadgeGreenText else Color(0xFFDC2626),
+                        fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
 
                 IconButton(onClick = { expanded = !expanded }) {
                     Icon(
                         if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = null
+                        contentDescription = null,
+                        tint = UtpPurplePrimary
                     )
                 }
             }
 
             AnimatedVisibility(visible = expanded) {
-                Column(modifier = Modifier.padding(top = 16.dp)) {
-                    HorizontalDivider()
-                    Spacer(modifier = Modifier.height(12.dp))
+                Column(modifier = Modifier.padding(top = 12.dp)) {
+                    HorizontalDivider(color = Color(0xFFF1F5F9))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     Text(
-                        text = "Detalle de Calificaciones:",
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 13.sp,
-                        color = MaterialTheme.colorScheme.onBackground
+                        text = "Detalle de Evaluaciones:",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp,
+                        color = UtpTextPrimary
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
 
                     course.details.forEach { detail ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 4.dp),
+                                .padding(vertical = 3.dp),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
                                 text = "${detail.evaluationName} (${detail.weight})",
-                                fontSize = 13.sp,
-                                color = Color.Gray
+                                fontSize = 12.sp,
+                                color = UtpTextSecondary
                             )
                             Text(
                                 text = detail.grade,
-                                fontSize = 13.sp,
+                                fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (detail.grade == "Pendiente") Color.Gray else MaterialTheme.colorScheme.onSurface
+                                color = if (detail.grade == "Pendiente") Color(0xFFD97706) else UtpTextPrimary
                             )
                         }
                     }

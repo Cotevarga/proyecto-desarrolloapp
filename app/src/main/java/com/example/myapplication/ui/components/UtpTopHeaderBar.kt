@@ -1,7 +1,6 @@
 package com.example.myapplication.ui.components
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -17,135 +16,112 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.myapplication.ui.theme.UtpCelestePrimary
 import com.example.myapplication.ui.theme.UtpPurplePrimary
 
 @Composable
 fun UtpTopHeaderBar(
-    userRole: String = "JEFATURA",
-    userName: String? = null,
+    userRole: String = "JEFATURA", // <- Cambiado a JEFATURA por defecto
+    userName: String = if (userRole.uppercase() == "DOCENTE") "Prof. María Angélica" else "Jefe UTP",
     showBack: Boolean = false,
     onBack: () -> Unit = {},
     onAccountSettings: () -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
-    val (headerColor, defaultName, roleTag) = when (userRole.uppercase()) {
-        "DOCENTE" -> Triple(UtpPurplePrimary, "Prof. Roberto G.", "DOCENTE")
-        "ALUMNO" -> Triple(Color(0xFF0EA5E9), "Est. Lucas M.", "ALUMNO")
-        else -> Triple(UtpCelestePrimary, "Prof. Carolina M.", "JEFATURA")
-    }
-
-    val displayName = userName ?: defaultName
-
     Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = headerColor,
-        shadowElevation = 3.dp
+        color = UtpPurplePrimary,
+        shadowElevation = 4.dp
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 6.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .statusBarsPadding()
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(
+                modifier = Modifier.weight(1f),
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 if (showBack) {
-                    IconButton(onClick = onBack, modifier = Modifier.size(36.dp)) {
+                    IconButton(onClick = onBack) {
                         Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Volver",
-                            tint = Color.White,
-                            modifier = Modifier.size(20.dp)
+                            tint = Color.White
                         )
                     }
-                    Spacer(modifier = Modifier.width(2.dp))
                 } else {
-                    Spacer(modifier = Modifier.width(6.dp))
-                }
-
-                // Avatar de Perfil
-                Surface(
-                    modifier = Modifier.size(34.dp),
-                    shape = CircleShape,
-                    color = Color.White.copy(alpha = 0.25f)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            Icons.Default.Person,
-                            contentDescription = "Perfil",
-                            tint = Color.White,
-                            modifier = Modifier.size(20.dp)
-                        )
+                    Surface(
+                        shape = RoundedCornerShape(20.dp),
+                        color = Color.White.copy(alpha = 0.2f),
+                        modifier = Modifier.size(38.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = "Perfil",
+                                tint = Color.White,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
                     }
                 }
 
-                Spacer(modifier = Modifier.width(8.dp))
-
-                // Columna de Título + Rol + Nombre
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.Center
-                ) {
+                Column(modifier = Modifier.weight(1f)) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(
-                            text = "Portal UTP",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold,
+                            text = "Escuela Marcela Paz",
                             color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
+
+                        val badgeText = if (userRole.uppercase() == "DOCENTE") "DOCENTE" else userRole.uppercase()
                         Surface(
                             shape = RoundedCornerShape(4.dp),
                             color = Color.White.copy(alpha = 0.25f)
                         ) {
                             Text(
-                                text = roleTag,
-                                fontSize = 8.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                text = badgeText,
                                 color = Color.White,
-                                maxLines = 1,
-                                softWrap = false, // Evita división vertical del texto
-                                modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.5.dp)
                             )
                         }
                     }
+
                     Text(
-                        text = displayName,
-                        fontSize = 11.sp,
-                        color = Color.White.copy(alpha = 0.9f),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        text = userName,
+                        color = Color.White.copy(alpha = 0.85f),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
                     )
                 }
             }
 
-            // Iconos de Acción (Ajustados para no colisionar)
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(0.dp)
-            ) {
-                IconButton(onClick = onAccountSettings, modifier = Modifier.size(36.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onAccountSettings) {
                     Icon(
-                        Icons.Default.Settings,
+                        imageVector = Icons.Default.Settings,
                         contentDescription = "Configuración",
                         tint = Color.White,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                 }
-                IconButton(onClick = onLogout, modifier = Modifier.size(36.dp)) {
+                IconButton(onClick = onLogout) {
                     Icon(
-                        Icons.AutoMirrored.Filled.ExitToApp,
+                        imageVector = Icons.AutoMirrored.Filled.ExitToApp,
                         contentDescription = "Cerrar Sesión",
                         tint = Color.White,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }

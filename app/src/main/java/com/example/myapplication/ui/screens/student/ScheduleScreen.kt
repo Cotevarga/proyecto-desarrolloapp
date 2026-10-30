@@ -18,7 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.myapplication.ui.theme.UtpRed
+import com.example.myapplication.ui.theme.*
 
 data class ClassSchedule(
     val id: Int,
@@ -35,17 +35,21 @@ data class ClassSchedule(
 fun ScheduleScreen(
     onBack: () -> Unit = {}
 ) {
-    val days = listOf("Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado")
+    val days = listOf("Lunes", "Martes", "Miércoles", "Jueves", "Viernes")
     var selectedDay by remember { mutableStateOf("Lunes") }
 
     val schedules = remember {
         listOf(
-            ClassSchedule(1, "Desarrollo de Apps Móviles", "18:30 - 21:30", "Aula A-402 • Pabellón A", "Ing. Carlos Mendoza", "Presencial", "Lunes"),
-            ClassSchedule(2, "Base de Datos Avanzada", "19:15 - 22:15", "Laboratorio L-201", "Dra. Ana Torres", "Presencial", "Martes"),
-            ClassSchedule(3, "Ingeniería de Software II", "18:30 - 20:45", "Virtual (Canvas UTP)", "Mg. Roberto Gomez", "Virtual", "Miércoles"),
-            ClassSchedule(4, "Arquitectura de Computadores", "20:00 - 22:15", "Aula B-305", "Ing. Luis Vargas", "Presencial", "Jueves"),
-            ClassSchedule(5, "Ética Profesional", "18:30 - 20:00", "Virtual (Canvas UTP)", "Lic. Elena Rios", "Virtual", "Viernes"),
-            ClassSchedule(6, "Taller de Proyectos", "08:00 - 12:00", "Laboratorio L-105", "Ing. Miguel Ramos", "Presencial", "Sábado")
+            ClassSchedule(1, "Matemática", "08:30 - 10:00", "Sala 1° A", "Prof. María Angélica", "Presencial", "Lunes"),
+            ClassSchedule(2, "Lenguaje y Comunicación", "10:15 - 11:45", "Sala 1° A", "Prof. Roberto Gómez", "Presencial", "Lunes"),
+            ClassSchedule(3, "Lenguaje y Comunicación", "08:30 - 10:00", "Sala 1° A", "Prof. Roberto Gómez", "Presencial", "Martes"),
+            ClassSchedule(4, "Ciencias Naturales", "10:15 - 11:45", "Sala 1° A", "Prof. Carolina Henríquez", "Presencial", "Martes"),
+            ClassSchedule(5, "Matemática", "08:30 - 10:00", "Sala 1° A", "Prof. María Angélica", "Presencial", "Miércoles"),
+            ClassSchedule(6, "Historia y Geografía", "10:15 - 11:45", "Sala 1° A", "Prof. Carolina Henríquez", "Presencial", "Miércoles"),
+            ClassSchedule(7, "Educación Física", "08:30 - 10:00", "Patio Central", "Prof. Felipe Soto", "Presencial", "Jueves"),
+            ClassSchedule(8, "Artes Visuales", "10:15 - 11:45", "Taller de Artes", "Prof. Ana María", "Presencial", "Jueves"),
+            ClassSchedule(9, "Matemática", "08:30 - 10:00", "Sala 1° A", "Prof. María Angélica", "Presencial", "Viernes"),
+            ClassSchedule(10, "Música", "10:15 - 11:45", "Sala de Música", "Prof. Jorge Luis", "Presencial", "Viernes")
         )
     }
 
@@ -69,35 +73,34 @@ fun ScheduleScreen(
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = "Horario de Clases",
-                fontSize = 22.sp,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
+                color = UtpTextPrimary
             )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Days Selector
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
         ) {
             items(days) { day ->
                 val isSelected = day == selectedDay
                 FilterChip(
                     selected = isSelected,
                     onClick = { selectedDay = day },
-                    label = { Text(day, color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface) },
+                    label = { Text(day, fontSize = 12.sp) },
                     colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = UtpRed,
-                        containerColor = MaterialTheme.colorScheme.surface
+                        selectedContainerColor = UtpPurplePrimary,
+                        selectedLabelColor = Color.White
                     ),
-                    shape = RoundedCornerShape(20.dp)
+                    shape = RoundedCornerShape(12.dp)
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         if (filteredSchedules.isEmpty()) {
             Box(
@@ -107,19 +110,20 @@ fun ScheduleScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "No tienes clases programadas para este día",
-                    color = Color.Gray,
-                    fontSize = 15.sp
+                    text = "No hay clases registradas para este día",
+                    color = UtpTextSecondary,
+                    fontSize = 13.sp
                 )
             }
         } else {
             LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
                 modifier = Modifier.weight(1f)
             ) {
                 items(filteredSchedules) { schedule ->
                     ScheduleCard(schedule = schedule)
                 }
+                item { Spacer(modifier = Modifier.height(60.dp)) }
             }
         }
     }
@@ -129,11 +133,11 @@ fun ScheduleScreen(
 fun ScheduleCard(schedule: ClassSchedule) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = UtpCardBackground),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(14.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -142,20 +146,20 @@ fun ScheduleCard(schedule: ClassSchedule) {
                 Text(
                     text = schedule.courseName,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
+                    fontSize = 15.sp,
+                    color = UtpTextPrimary
                 )
 
-                val isVirtual = schedule.modality.equals("Virtual", ignoreCase = true)
                 Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = if (isVirtual) Color(0xFFE3F2FD) else Color(0xFFE8F5E9)
+                    shape = RoundedCornerShape(6.dp),
+                    color = UtpBadgeGreenBg
                 ) {
                     Text(
                         text = schedule.modality,
-                        color = if (isVirtual) Color(0xFF1565C0) else Color(0xFF2E7D32),
-                        fontSize = 12.sp,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        fontWeight = FontWeight.Medium
+                        color = UtpBadgeGreenText,
+                        fontSize = 10.sp,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
@@ -163,25 +167,25 @@ fun ScheduleCard(schedule: ClassSchedule) {
             Spacer(modifier = Modifier.height(8.dp))
 
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Schedule, contentDescription = null, tint = UtpRed, modifier = Modifier.size(16.dp))
+                Icon(Icons.Default.Schedule, contentDescription = null, tint = UtpPurplePrimary, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(text = schedule.time, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                Text(text = schedule.time, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = UtpTextPrimary)
             }
 
             Spacer(modifier = Modifier.height(4.dp))
 
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Room, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(16.dp))
+                Icon(Icons.Default.Room, contentDescription = null, tint = UtpTextSecondary, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(text = schedule.classroom, fontSize = 14.sp, color = Color.Gray)
+                Text(text = schedule.classroom, fontSize = 12.sp, color = UtpTextSecondary)
             }
 
             Spacer(modifier = Modifier.height(4.dp))
 
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Person, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(16.dp))
+                Icon(Icons.Default.Person, contentDescription = null, tint = UtpTextSecondary, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(text = schedule.professor, fontSize = 14.sp, color = Color.Gray)
+                Text(text = schedule.professor, fontSize = 12.sp, color = UtpTextSecondary)
             }
         }
     }

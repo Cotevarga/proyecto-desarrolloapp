@@ -1,12 +1,11 @@
 package com.example.myapplication.ui.screens.teacher
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -28,44 +27,25 @@ import com.example.myapplication.ui.theme.*
 fun CourseProgressScreen(
     onBack: () -> Unit = {},
     onSelectStudentReport: (EstudianteAvance) -> Unit = {},
-    onAccountSettings: () -> Unit = {},
+    onAccountSettings: () -> Unit = {}, // <-- Parámetro agregado
     onLogout: () -> Unit = {},
     repository: TeacherRepository = remember { TeacherRepository() }
 ) {
-    var searchQuery by remember { mutableStateOf("") }
     var cursoFiltro by remember { mutableStateOf("Todos") }
-    var estudianteSeleccionado by remember { mutableStateOf<EstudianteAvance?>(null) }
+    var searchQuery by remember { mutableStateOf("") }
+
+    // Modal de Avance del Estudiante
+    var estudianteSeleccionadoModal by remember { mutableStateOf<EstudianteAvance?>(null) }
 
     val docenteActivo = remember { repository.getDocenteById("doc_1") }
-    val todosLosEstudiantes = remember(docenteActivo.id) { repository.getEstudiantesPorDocente(docenteActivo.id) }
+    val listaEstudiantes = remember { repository.getEstudiantesPorDocente("doc_1") }
 
-    val opcionesCursos = remember(docenteActivo) {
-        if (docenteActivo.seccionesAsignadas.size > 1) {
-            listOf("Todos") + docenteActivo.seccionesAsignadas
-        } else {
-            docenteActivo.seccionesAsignadas
-        }
-    }
-
-    val sugerenciasAutocompletado = remember(searchQuery) {
-        if (searchQuery.isBlank()) emptyList()
-        else todosLosEstudiantes
-            .map { it.nombre }
-            .filter { it.contains(searchQuery, ignoreCase = true) }
-            .distinct()
-            .take(4)
-    }
-
-    val estudiantesFiltrados = remember(searchQuery, cursoFiltro) {
-        todosLosEstudiantes.filter { est ->
-            val coincideBusqueda = searchQuery.isBlank() ||
-                    est.nombre.contains(searchQuery, ignoreCase = true) ||
-                    est.rut.contains(searchQuery, ignoreCase = true)
-
-            val coincideCurso = cursoFiltro == "Todos" || est.curso == cursoFiltro
-
-            coincideBusqueda && coincideCurso
-        }
+    val estudiantesFiltrados = listaEstudiantes.filter { est ->
+        val coincideCurso = cursoFiltro == "Todos" || est.curso == cursoFiltro
+        val coincideBusqueda = searchQuery.isBlank() ||
+                est.nombre.contains(searchQuery, ignoreCase = true) ||
+                est.rut.contains(searchQuery, ignoreCase = true)
+        coincideCurso && coincideBusqueda
     }
 
     Box(modifier = Modifier.fillMaxSize().background(UtpWarmBackground)) {
@@ -73,7 +53,7 @@ fun CourseProgressScreen(
             UtpTopHeaderBar(
                 userRole = "DOCENTE",
                 showBack = false,
-                onAccountSettings = onAccountSettings,
+                onAccountSettings = onAccountSettings, // <-- Conectado
                 onLogout = onLogout
             )
 
@@ -86,100 +66,58 @@ fun CourseProgressScreen(
                 item { Spacer(modifier = Modifier.height(10.dp)) }
 
                 item {
-                    Text("Alumnos y Progreso (${docenteActivo.materiaPrincipal})", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = UtpTextPrimary)
-                    Text("Docente: ${docenteActivo.nombre} • ${docenteActivo.seccionesAsignadas.joinToString(", ")}", fontSize = 12.sp, color = UtpTextSecondary)
-                }
-
-                item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text("OA1: Contar y representar del 1 al 10", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = UtpTextPrimary)
-                                Surface(shape = RoundedCornerShape(6.dp), color = UtpPurpleSoft) {
-                                    Text("75% Avance", fontSize = 11.sp, color = UtpPurplePrimary, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
-                                }
-                            }
-                            Spacer(modifier = Modifier.height(8.dp))
-                            LinearProgressIndicator(
-                                progress = { 0.75f },
-                                modifier = Modifier.fillMaxWidth().height(6.dp),
-                                color = UtpPurplePrimary,
-                                trackColor = UtpPurpleSoft
-                            )
-                        }
-                    }
-                }
-
-                item {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedTextField(
-                            value = searchQuery,
-                            onValueChange = { searchQuery = it },
-                            placeholder = { Text("Buscar estudiante por nombre o RUT...", fontSize = 12.sp) },
-                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = UtpPurplePrimary) },
-                            trailingIcon = {
-                                if (searchQuery.isNotEmpty()) {
-                                    IconButton(onClick = { searchQuery = "" }) {
-                                        Icon(Icons.Default.Clear, contentDescription = "Limpiar")
-                                    }
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedContainerColor = Color.White,
-                                unfocusedContainerColor = Color.White,
-                                focusedBorderColor = UtpPurplePrimary
-                            ),
-                            singleLine = true
+                    Column {
+                        Text(
+                            text = "Seguimiento de Alumnos",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = UtpTextPrimary
                         )
-
-                        if (sugerenciasAutocompletado.isNotEmpty()) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text("Sugerencias: ", fontSize = 11.sp, color = UtpTextSecondary, fontWeight = FontWeight.Bold)
-                                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    items(sugerenciasAutocompletado) { nombreSugerido ->
-                                        SuggestionChip(
-                                            onClick = { searchQuery = nombreSugerido },
-                                            label = { Text(nombreSugerido, fontSize = 11.sp, color = UtpPurplePrimary) },
-                                            colors = SuggestionChipDefaults.suggestionChipColors(
-                                                containerColor = UtpPurpleSoft
-                                            )
-                                        )
-                                    }
-                                }
-                            }
-                        }
+                        Text(
+                            text = "Avance individual y rendimiento en ${docenteActivo.materiaPrincipal}",
+                            fontSize = 12.sp,
+                            color = UtpTextSecondary
+                        )
                     }
                 }
 
                 item {
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text("Filtrar por Curso Asignado", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = UtpTextSecondary)
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            opcionesCursos.forEach { curso ->
-                                val isSelected = cursoFiltro == curso
-                                FilterChip(
-                                    selected = isSelected,
-                                    onClick = { cursoFiltro = curso },
-                                    label = { Text(curso, fontSize = 12.sp) },
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        selectedContainerColor = UtpPurplePrimary,
-                                        selectedLabelColor = Color.White
-                                    )
-                                )
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        placeholder = { Text("Buscar por alumno o RUT...", fontSize = 12.sp) },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = UtpPurplePrimary) },
+                        trailingIcon = {
+                            if (searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { searchQuery = "" }) {
+                                    Icon(Icons.Default.Clear, contentDescription = "Limpiar")
+                                }
                             }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color.White,
+                            focusedBorderColor = UtpPurplePrimary
+                        ),
+                        singleLine = true
+                    )
+                }
+
+                item {
+                    val cursosFiltroList = listOf("Todos", "1° A", "1° B")
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(cursosFiltroList) { c ->
+                            FilterChip(
+                                selected = cursoFiltro == c,
+                                onClick = { cursoFiltro = c },
+                                label = { Text(c, fontSize = 12.sp) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = UtpPurplePrimary,
+                                    selectedLabelColor = Color.White
+                                )
+                            )
                         }
                     }
                 }
@@ -193,123 +131,204 @@ fun CourseProgressScreen(
                     )
                 }
 
-                if (estudiantesFiltrados.isEmpty()) {
-                    item {
-                        Card(
-                            modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White)
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(24.dp).fillMaxWidth(),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Icon(Icons.Default.PersonSearch, contentDescription = null, tint = UtpTextSecondary, modifier = Modifier.size(36.dp))
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text("No se encontraron estudiantes.", fontSize = 12.sp, color = UtpTextSecondary)
-                            }
-                        }
+                items(estudiantesFiltrados) { estudiante ->
+                    val esFinalizado = estudiante.estadoDesafios == "Finalizado"
+                    val progreso = when {
+                        estudiante.desafiosCompletados.startsWith("3/3") -> 1.0f
+                        estudiante.desafiosCompletados.startsWith("2/3") -> 0.66f
+                        estudiante.desafiosCompletados.startsWith("1/3") -> 0.33f
+                        else -> 0.0f
                     }
-                } else {
-                    items(estudiantesFiltrados) { est ->
-                        val (badgeBg, badgeText) = when (est.estadoDesafios.lowercase()) {
-                            "finalizado" -> UtpBadgeGreenBg to UtpBadgeGreenText
-                            "pendiente" -> UtpBadgeRedBg to UtpBadgeRedText
-                            else -> UtpBadgeBlueBg to UtpBadgeBlueText
-                        }
 
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { estudianteSeleccionado = est },
-                            shape = RoundedCornerShape(14.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                        ) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = UtpCardBackground),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
                             Row(
-                                modifier = Modifier.padding(14.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Surface(
-                                    modifier = Modifier.size(42.dp),
-                                    shape = CircleShape,
-                                    color = UtpPurpleSoft
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Surface(
+                                        shape = RoundedCornerShape(20.dp),
+                                        color = UtpPurpleSoft,
+                                        modifier = Modifier.size(40.dp)
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Text(
+                                                text = estudiante.nombre.take(1),
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 16.sp,
+                                                color = UtpPurplePrimary
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.width(10.dp))
+
+                                    Column {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text(
+                                                text = estudiante.nombre,
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = UtpTextPrimary
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Surface(
+                                                shape = RoundedCornerShape(6.dp),
+                                                color = if (estudiante.curso == "1° B") UtpPurplePrimary else UtpOrangeHighlight
+                                            ) {
+                                                Text(
+                                                    text = estudiante.curso,
+                                                    fontSize = 10.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = Color.White,
+                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                                )
+                                            }
+                                        }
                                         Text(
-                                            text = est.nombre.take(1),
-                                            fontWeight = FontWeight.Bold,
-                                            color = UtpPurplePrimary,
-                                            fontSize = 16.sp
+                                            text = "RUT: ${estudiante.rut}",
+                                            fontSize = 11.sp,
+                                            color = UtpTextSecondary
                                         )
                                     }
                                 }
 
-                                Spacer(modifier = Modifier.width(12.dp))
-
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(est.nombre, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = UtpTextPrimary)
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Surface(shape = RoundedCornerShape(4.dp), color = UtpPurpleSoft) {
-                                            Text(est.curso, fontSize = 9.sp, color = UtpPurplePrimary, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp))
-                                        }
-                                    }
-                                    Text("${est.desafiosCompletados} • ${est.pruebaPuntaje}", fontSize = 11.sp, color = UtpTextSecondary)
-                                }
-
-                                Surface(shape = RoundedCornerShape(6.dp), color = badgeBg) {
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = if (esFinalizado) UtpBadgeGreenBg else Color(0xFFFEE2E2)
+                                ) {
                                     Text(
-                                        text = est.estadoDesafios,
-                                        color = badgeText,
+                                        text = estudiante.estadoDesafios,
+                                        color = if (esFinalizado) UtpBadgeGreenText else Color(0xFFDC2626),
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
                                     )
                                 }
+                            }
 
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Icon(Icons.Default.ChevronRight, contentDescription = null, tint = UtpTextSecondary)
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            Column {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = "Avance: ${estudiante.desafiosCompletados}",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = UtpTextSecondary
+                                    )
+                                    Text(
+                                        text = "${(progreso * 100).toInt()}%",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = UtpPurplePrimary
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(4.dp))
+                                LinearProgressIndicator(
+                                    progress = { progreso },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(6.dp),
+                                    color = UtpPurplePrimary,
+                                    trackColor = Color(0xFFE2E8F0),
+                                    strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                OutlinedButton(
+                                    onClick = { estudianteSeleccionadoModal = estudiante },
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = UtpPurplePrimary),
+                                    border = BorderStroke(1.dp, UtpPurplePrimary),
+                                    contentPadding = PaddingValues(vertical = 8.dp)
+                                ) {
+                                    Icon(Icons.Default.Visibility, contentDescription = null, modifier = Modifier.size(14.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Ver Avance", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                }
+
+                                Button(
+                                    onClick = { onSelectStudentReport(estudiante) },
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = UtpPurplePrimary),
+                                    contentPadding = PaddingValues(vertical = 8.dp)
+                                ) {
+                                    Icon(Icons.Default.Assessment, contentDescription = null, modifier = Modifier.size(14.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Ver Informe", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                }
                             }
                         }
                     }
                 }
 
-                item { Spacer(modifier = Modifier.height(100.dp)) }
+                item { Spacer(modifier = Modifier.height(80.dp)) }
             }
         }
 
-        estudianteSeleccionado?.let { est ->
+        estudianteSeleccionadoModal?.let { est ->
             AlertDialog(
-                onDismissRequest = { estudianteSeleccionado = null },
-                title = { Text("Respuestas: ${est.nombre} (${est.curso})") },
+                onDismissRequest = { estudianteSeleccionadoModal = null },
+                title = {
+                    Text(
+                        text = "Respuestas: ${est.nombre} (${est.curso})",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                },
                 text = {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("Rendimiento en Prueba Final (OA1):", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = UtpTextSecondary)
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Text(
+                            text = "Rendimiento en Prueba Final (OA1):",
+                            fontSize = 12.sp,
+                            color = Color(0xFFE2E8F0)
+                        )
 
-                        if (est.preguntasDetalle.isEmpty()) {
-                            Text("El estudiante aún no rinde la prueba final.", fontSize = 12.sp, color = UtpBadgeRedText)
-                        } else {
-                            est.preguntasDetalle.forEach { (pregunta, correcta) ->
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(pregunta, fontSize = 12.sp, modifier = Modifier.weight(1f))
-                                    Surface(
-                                        shape = RoundedCornerShape(4.dp),
-                                        color = if (correcta) UtpBadgeGreenBg else UtpBadgeRedBg
-                                    ) {
-                                        Text(
-                                            text = if (correcta) "✓ Correcta" else "✗ Incorrecta",
-                                            fontSize = 10.sp,
-                                            color = if (correcta) UtpBadgeGreenText else UtpBadgeRedText,
-                                            fontWeight = FontWeight.Bold,
-                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
-                                        )
-                                    }
-                                }
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = Color(0xFFFEF2F2),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.Info,
+                                    contentDescription = null,
+                                    tint = Color(0xFFDC2626),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Aún no se implementa la base de datos",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFFDC2626)
+                                )
                             }
                         }
                     }
@@ -317,18 +336,19 @@ fun CourseProgressScreen(
                 confirmButton = {
                     Button(
                         onClick = {
-                            val temp = estudianteSeleccionado
-                            estudianteSeleccionado = null
-                            if (temp != null) onSelectStudentReport(temp)
+                            val alumno = est
+                            estudianteSeleccionadoModal = null
+                            onSelectStudentReport(alumno)
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = UtpPurplePrimary)
+                        colors = ButtonDefaults.buttonColors(containerColor = UtpPurplePrimary),
+                        shape = RoundedCornerShape(10.dp)
                     ) {
-                        Text("Ver Informe Pedagógico")
+                        Text("Ver Informe Pedagógico", fontSize = 12.sp, color = Color.White, fontWeight = FontWeight.Bold)
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { estudianteSeleccionado = null }) {
-                        Text("Cerrar")
+                    TextButton(onClick = { estudianteSeleccionadoModal = null }) {
+                        Text("Cerrar", fontSize = 12.sp, color = Color.LightGray)
                     }
                 }
             )
